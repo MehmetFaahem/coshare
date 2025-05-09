@@ -11,7 +11,6 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Location } from "../../types";
 import { MapPin, Navigation, X } from "lucide-react";
-import _ from "lodash";
 
 // Fix the icon issue with Leaflet in React
 const markerIcon = new L.Icon({
@@ -50,7 +49,7 @@ const endIcon = new L.Icon({
 });
 
 // Debounce utility function
-function debounce<T extends (...args: any[]) => any>(
+function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -72,7 +71,8 @@ const MapEvents = ({
   selectingLocation: "start" | "destination" | null;
   setLoading: (isLoading: boolean) => void;
 }) => {
-  const map = useMap();
+  // We don't need to store map as a variable if not used
+  useMap();
 
   // Debounce the reverse geocoding API call
   const debouncedGeocode = useCallback(
@@ -229,9 +229,12 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
     // Update the location in parent component
     onChange(selectedLocation, type);
 
-    // Center map on the selected location
+    // Center map on the selected location with animation and zoom
     if (mapRef.current) {
-      mapRef.current.setView([lat, lng], 15);
+      mapRef.current.setView([lat, lng], 15, {
+        animate: true,
+        duration: 1,
+      });
     }
 
     setQuery(item.display_name.split(",")[0].trim());
@@ -364,11 +367,15 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
         onDestinationChange(location);
       }
 
-      // Center map on the selected location
+      // Center map on the selected location with animation
       if (mapRef.current) {
         mapRef.current.setView(
           [location.coordinates.lat, location.coordinates.lng],
-          15
+          15,
+          {
+            animate: true,
+            duration: 1,
+          }
         );
       }
 
@@ -407,11 +414,15 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
         onDestinationChange(location);
       }
 
-      // Center map on new position
+      // Center map on new position with animation
       if (mapRef.current) {
         mapRef.current.setView(
           [latlng.lat, latlng.lng],
-          mapRef.current.getZoom()
+          mapRef.current.getZoom(),
+          {
+            animate: true,
+            duration: 1,
+          }
         );
       }
     } catch (error) {
@@ -466,7 +477,10 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
 
           // Center map on user's location
           if (mapRef.current) {
-            mapRef.current.setView(newPosition, 15);
+            mapRef.current.setView(newPosition, 15, {
+              animate: true,
+              duration: 1,
+            });
           }
         },
         (error) => {
@@ -474,12 +488,6 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
         }
       );
     }
-  };
-
-  // Function to get map instance when created
-  const whenCreated = (map: L.Map) => {
-    // @ts-expect-error - Assigning to ref
-    mapRef.current = map;
   };
 
   return (
@@ -557,7 +565,9 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
           center={getCenterPosition()}
           zoom={13}
           style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-          whenCreated={whenCreated}
+          whenReady={(e) => {
+            mapRef.current = e.target;
+          }}
         >
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
