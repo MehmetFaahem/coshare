@@ -1,0 +1,296 @@
+import React from "react";
+import { RideRequest } from "../../types";
+import { MapPin, Navigation, Users, Calendar, Clock, User } from "lucide-react";
+import RideMap from "../map/RideMap";
+import { useAuth } from "../../contexts/AuthContext";
+import { useRide } from "../../contexts/RideContext";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
+import { useNotification } from "../../contexts/NotificationContext";
+
+interface RideDetailProps {
+  ride: RideRequest;
+}
+
+const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
+  const { user } = useAuth();
+  const { joinRideRequest, cancelRideRequest, completeRideRequest } = useRide();
+  const { addNotification } = useNotification();
+  const navigate = useNavigate();
+
+  const isCreator = user && ride.creator === user.id;
+  const isPassenger = user && ride.passengers.includes(user.id);
+  const canJoin =
+    user && !isPassenger && ride.status === "open" && ride.seatsAvailable > 0;
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getStatusBadge = () => {
+    switch (ride.status) {
+      case "open":
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 mr-1.5"></span>
+            Open
+          </span>
+        );
+      case "full":
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
+            <span className="h-2 w-2 rounded-full bg-amber-500 mr-1.5"></span>
+            Full
+          </span>
+        );
+      case "completed":
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+            <span className="h-2 w-2 rounded-full bg-blue-500 mr-1.5"></span>
+            Completed
+          </span>
+        );
+      case "cancelled":
+        return (
+          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
+            <span className="h-2 w-2 rounded-full bg-red-500 mr-1.5"></span>
+            Cancelled
+          </span>
+        );
+    }
+  };
+
+  const handleJoinRide = async () => {
+    try {
+      await joinRideRequest(ride.id);
+      addNotification(
+        `You have joined a ride to ${ride.destination.address}.`,
+        "join",
+        ride.id
+      );
+      toast.success("Successfully joined the ride");
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error("Failed to join ride");
+      console.error(error);
+    }
+  };
+
+  const handleCancelRide = async () => {
+    try {
+      await cancelRideRequest(ride.id);
+      addNotification(
+        `You have cancelled your ride to ${ride.destination.address}.`,
+        "update",
+        ride.id
+      );
+      toast.success("Ride cancelled successfully");
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error("Failed to cancel ride");
+      console.error(error);
+    }
+  };
+
+  const handleCompleteRide = async () => {
+    try {
+      await completeRideRequest(ride.id);
+      addNotification(
+        `Your ride to ${ride.destination.address} has been completed.`,
+        "update",
+        ride.id
+      );
+      toast.success("Ride completed successfully");
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error("Failed to complete ride");
+      console.error(error);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="p-6">
+        <div className="flex flex-wrap justify-between items-start mb-6">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">
+              Ride #{ride.id.substring(0, 4)}
+            </h2>
+            <p className="text-gray-600 flex items-center mt-2">
+              <Calendar className="h-5 w-5 mr-2" />
+              Created on {formatDate(ride.createdAt)} at{" "}
+              {formatTime(ride.createdAt)}
+            </p>
+          </div>
+          <div className="mt-2 sm:mt-0">{getStatusBadge()}</div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                Ride Details
+              </h3>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex items-start mb-4">
+                  <MapPin className="h-5 w-5 text-emerald-600 mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">
+                      STARTING POINT
+                    </p>
+                    <p className="text-gray-800">
+                      {ride.startingPoint.address}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start">
+                  <Navigation className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
+                  <div>
+                    <p className="text-xs text-gray-500 font-medium">
+                      DESTINATION
+                    </p>
+                    <p className="text-gray-800">{ride.destination.address}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-lg font-semibold mb-3 text-gray-800">
+                Passengers
+              </h3>
+
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-3">
+                  <div className="flex items-center">
+                    <Users className="h-5 w-5 text-gray-500 mr-2" />
+                    <span className="font-medium">
+                      {ride.passengers.length}/{ride.totalSeats} passengers
+                    </span>
+                  </div>
+                  <span className="text-sm text-gray-500">
+                    {ride.seatsAvailable} seats available
+                  </span>
+                </div>
+
+                <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
+                  <div
+                    className="h-full bg-emerald-500"
+                    style={{
+                      width: `${
+                        (ride.passengers.length / ride.totalSeats) * 100
+                      }%`,
+                    }}
+                  ></div>
+                </div>
+
+                <div className="space-y-3">
+                  {/* In a real app, you'd fetch and display actual passenger information */}
+                  {ride.passengers.map((passengerId, index) => (
+                    <div key={index} className="flex items-center">
+                      <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-3">
+                        <User className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-800">
+                          {passengerId === ride.creator
+                            ? "Ride Creator"
+                            : `Passenger ${index + 1}`}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {passengerId === ride.creator ? "(Creator)" : ""}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-3 text-gray-800">
+              Route Map
+            </h3>
+            <RideMap
+              startingPoint={ride.startingPoint}
+              destination={ride.destination}
+              height="300px"
+            />
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              {canJoin && (
+                <button
+                  onClick={handleJoinRide}
+                  className="px-4 py-2 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+                >
+                  Join This Ride
+                </button>
+              )}
+
+              {isPassenger &&
+                ride.status !== "completed" &&
+                ride.status !== "cancelled" && (
+                  <button
+                    onClick={handleCancelRide}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  >
+                    {isCreator ? "Cancel Ride" : "Leave Ride"}
+                  </button>
+                )}
+
+              {isCreator &&
+                ride.status !== "completed" &&
+                ride.status !== "cancelled" && (
+                  <button
+                    onClick={handleCompleteRide}
+                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Mark as Completed
+                  </button>
+                )}
+
+              <button
+                onClick={() => navigate(-1)}
+                className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              >
+                Go Back
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="border-t border-gray-200 pt-6">
+          <h3 className="text-lg font-semibold mb-3 text-gray-800">
+            Instructions for Riders
+          </h3>
+          <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
+            <p className="text-amber-800">
+              <strong>Important:</strong> This app only helps you find
+              co-passengers. Once your group is formed, you'll need to arrange
+              for a rickshaw offline. We recommend meeting at the starting point
+              10 minutes before your planned departure.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default RideDetail;

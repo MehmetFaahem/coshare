@@ -1,0 +1,266 @@
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { Notification } from "../types";
+import { useAuth } from "./AuthContext";
+import { useSocket } from "./SocketContext";
+import { toast } from "react-hot-toast";
+import { supabase } from "../lib/supabase";
+
+interface NotificationContextType {
+  notifications: Notification[];
+  unreadCount: number;
+  addNotification: (
+    message: string,
+    type: Notification["type"],
+    rideId?: string
+  ) => void;
+  markAsRead: (id: string) => void;
+  markAllAsRead: () => void;
+}
+
+const NotificationContext = createContext<NotificationContextType | undefined>(
+  undefined
+);
+
+export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const { user } = useAuth();
+  const { socket } = useSocket();
+
+  // Load notifications from Supabase
+  useEffect(() => {
+    if (!user) {
+      setNotifications([]);
+      return;
+    }
+
+    const fetchNotifications = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("notifications")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false });
+
+        if (error) {
+          console.error("Error fetching notifications:", error);
+          return;
+        }
+
+        if (data) {
+          // Transform data to match our Notification type
+          const transformedNotifications = data.map((notification) => ({
+            id: notification.id,
+            userId: notification.user_id,
+            message: notification.message,
+            read: notification.read,
+            type: notification.type as Notification["type"],
+            rideId: notification.ride_id,
+            createdAt: notification.created_at,
+          }));
+
+          setNotifications(transformedNotifications);
+        }
+      } catch (error) {
+        console.error("Error in notification fetching process:", error);
+      }
+    };
+
+    fetchNotifications();
+
+    // Set up subscription for real-time updates
+    const notificationSubscription = supabase
+      .channel("notification_changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          fetchNotifications();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(notificationSubscription);
+    };
+  }, [user]);
+
+  // Listen for socket events that would trigger notifications
+  useEffect(() => {
+    if (!socket || !user) return;
+
+    const handleRideUpdate = (data: any) => {
+      // Check if the user is part of this ride
+      if (data.creator === user.id || data.passengers.includes(user.id)) {
+        const message = `Ride to ${data.destination.address} has been updated.`;
+        addNotification(message, "update", data.id);
+      }
+    };
+
+    const handleRideJoin = (data: any) => {
+      // If the user is the creator, notify them when someone joins
+      if (data.creator === user.id) {
+        const message = `A new passenger has joined your ride to ${data.destination.address}.`;
+        addNotification(message, "join", data.id);
+      }
+    };
+
+    socket.on("ride:update", handleRideUpdate);
+    socket.on("ride:join", handleRideJoin);
+
+    return () => {
+      socket.off("ride:update", handleRideUpdate);
+      socket.off("ride:join", handleRideJoin);
+    };
+  }, [socket, user]);
+
+  const unreadCount = notifications.filter(
+    (notification) => !notification.read
+  ).length;
+
+  const addNotification = async (
+    message: string,
+    type: Notification["type"],
+    rideId?: string
+  ) => {
+    if (!user) return;
+
+    try {
+      // Insert notification into Supabase
+      const { data, error } = await supabase
+        .from("notifications")
+        .insert({
+          user_id: user.id,
+          message,
+          type,
+          read: false,
+          ride_id: rideId,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Error adding notification:", error);
+        return;
+      }
+
+      if (!data) {
+        console.error("No data returned when adding notification");
+        return;
+      }
+
+      // Create notification object for the client
+      const newNotification: Notification = {
+        id: data.id,
+        userId: user.id,
+        message,
+        read: false,
+        type,
+        rideId,
+        createdAt: data.created_at,
+      };
+
+      // Update local state
+      setNotifications((prev) => [newNotification, ...prev]);
+
+      // Show toast notification
+      toast(message, {
+        icon: type === "match" ? "🔍" : type === "join" ? "👤" : "🔔",
+        duration: 4000,
+      });
+    } catch (error) {
+      console.error("Error adding notification:", error);
+    }
+  };
+
+  const markAsRead = async (id: string) => {
+    if (!user) return;
+
+    try {
+      // Make sure the notification exists and belongs to the user
+      const notificationToUpdate = notifications.find((n) => n.id === id);
+      if (!notificationToUpdate || notificationToUpdate.userId !== user.id) {
+        console.error("Notification not found or doesn't belong to the user");
+        return;
+      }
+
+      // Update notification in Supabase
+      const { error } = await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("id", id)
+        .eq("user_id", user.id); // Extra safety with RLS
+
+      if (error) {
+        console.error("Error marking notification as read:", error);
+        return;
+      }
+
+      // Update local state
+      setNotifications((prev) =>
+        prev.map((notification) =>
+          notification.id === id
+            ? { ...notification, read: true }
+            : notification
+        )
+      );
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    if (!user || notifications.length === 0) return;
+
+    try {
+      // Update all notifications for this user in Supabase
+      const { error } = await supabase
+        .from("notifications")
+        .update({ read: true })
+        .eq("user_id", user.id)
+        .eq("read", false);
+
+      if (error) {
+        console.error("Error marking all notifications as read:", error);
+        return;
+      }
+
+      // Update local state
+      setNotifications((prev) =>
+        prev.map((notification) => ({ ...notification, read: true }))
+      );
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+    }
+  };
+
+  return (
+    <NotificationContext.Provider
+      value={{
+        notifications,
+        unreadCount,
+        addNotification,
+        markAsRead,
+        markAllAsRead,
+      }}
+    >
+      {children}
+    </NotificationContext.Provider>
+  );
+};
+
+export const useNotification = () => {
+  const context = useContext(NotificationContext);
+  if (context === undefined) {
+    throw new Error(
+      "useNotification must be used within a NotificationProvider"
+    );
+  }
+  return context;
+};
