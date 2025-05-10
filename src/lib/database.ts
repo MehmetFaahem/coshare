@@ -68,7 +68,8 @@ export const createRide = async (
   creatorId: string,
   startingPoint: Location,
   destination: Location,
-  totalSeats: number
+  totalSeats: number,
+  contactPhone: string
 ) => {
   // Insert the ride
   const { data, error } = await supabase
@@ -80,6 +81,7 @@ export const createRide = async (
       seats_available: totalSeats - 1, // Creator takes one seat
       total_seats: totalSeats,
       status: "open",
+      contact_phone: contactPhone,
     })
     .select()
     .single();
@@ -105,13 +107,18 @@ export const createRide = async (
   return data;
 };
 
-export const joinRide = async (rideId: string, userId: string) => {
+export const joinRide = async (
+  rideId: string,
+  userId: string,
+  contactPhone: string
+) => {
   // Add user as passenger
   const { error: passengerError } = await supabase
     .from("ride_passengers")
     .insert({
       ride_id: rideId,
       user_id: userId,
+      contact_phone: contactPhone,
     });
 
   if (passengerError) {

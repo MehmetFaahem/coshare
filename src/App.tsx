@@ -1,16 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
+  useNavigate,
+  useSearchParams,
 } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { RideProvider } from "./contexts/RideContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { SocketProvider } from "./contexts/SocketContext";
 import PrivateRoute from "./components/auth/PrivateRoute";
+import { toast } from "react-hot-toast";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -20,9 +23,41 @@ import DashboardPage from "./pages/DashboardPage";
 import CreateRidePage from "./pages/CreateRidePage";
 import FindRidesPage from "./pages/FindRidesPage";
 import RideDetailPage from "./pages/RideDetailPage";
+import EmailConfirmationPage from "./pages/EmailConfirmationPage";
 
 // Add custom styles for leaflet markers
 import "./index.css";
+
+// Component to handle email verification callback
+const VerifyEmail = () => {
+  const [searchParams] = useSearchParams();
+  const { refreshSession } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleVerification = async () => {
+      try {
+        // Process the verification and refresh the session
+        await refreshSession();
+        toast.success("Email verified successfully!");
+        navigate("/dashboard");
+      } catch (error) {
+        console.error("Email verification error:", error);
+        toast.error("Failed to verify email. Please try again later.");
+        navigate("/login");
+      }
+    };
+
+    // If verification parameters exist in URL, handle them
+    if (searchParams.get("type") === "email_confirmation") {
+      handleVerification();
+    } else {
+      navigate("/login");
+    }
+  }, [searchParams, refreshSession, navigate]);
+
+  return <div>Verifying your email...</div>;
+};
 
 function App() {
   return (
@@ -60,6 +95,11 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
+                <Route
+                  path="/email-confirmation"
+                  element={<EmailConfirmationPage />}
+                />
+                <Route path="/auth/verify" element={<VerifyEmail />} />
 
                 {/* Protected Routes */}
                 <Route

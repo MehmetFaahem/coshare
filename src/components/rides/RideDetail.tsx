@@ -1,15 +1,24 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { RideRequest } from "../../types";
-import { MapPin, Navigation, Users, Calendar, Clock, User } from "lucide-react";
+import { MapPin, Navigation, Users, Calendar, User, Phone } from "lucide-react";
 import RideMap from "../map/RideMap";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRide } from "../../contexts/RideContext";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../../contexts/NotificationContext";
+import PhoneNumberModal from "./PhoneNumberModal";
+import { supabase } from "../../lib/supabase";
 
 interface RideDetailProps {
   ride: RideRequest;
+}
+
+// New interface for passenger info including phone
+interface PassengerInfo {
+  id: string;
+  isCreator: boolean;
+  contactPhone?: string;
 }
 
 const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
@@ -17,11 +26,66 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
   const { joinRideRequest, cancelRideRequest, completeRideRequest } = useRide();
   const { addNotification } = useNotification();
   const navigate = useNavigate();
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [passengers, setPassengers] = useState<PassengerInfo[]>([]);
 
   const isCreator = user && ride.creator === user.id;
   const isPassenger = user && ride.passengers.includes(user.id);
   const canJoin =
     user && !isPassenger && ride.status === "open" && ride.seatsAvailable > 0;
+
+  // Fetch passengers with phone numbers
+  useEffect(() => {
+    const fetchPassengersInfo = async () => {
+      try {
+        // Get passenger info including phone numbers
+        const { data, error } = await supabase
+          .from("ride_passengers")
+          .select("user_id, contact_phone")
+          .eq("ride_id", ride.id);
+
+        if (error) {
+          console.error("Error fetching passengers:", error);
+          // Create fallback passenger data using the ride's passengers array
+          const fallbackPassengers: PassengerInfo[] = ride.passengers.map(
+            (passengerId) => ({
+              id: passengerId,
+              isCreator: passengerId === ride.creator,
+              contactPhone:
+                passengerId === ride.creator ? ride.contactPhone : undefined,
+            })
+          );
+          setPassengers(fallbackPassengers);
+          return;
+        }
+
+        // Map passengers data with creator flag
+        const passengersInfo: PassengerInfo[] = data.map((passenger) => ({
+          id: passenger.user_id,
+          isCreator: passenger.user_id === ride.creator,
+          contactPhone: passenger.contact_phone,
+        }));
+
+        setPassengers(passengersInfo);
+      } catch (err) {
+        console.error("Error fetching passenger details:", err);
+        // Create fallback passenger data
+        const fallbackPassengers: PassengerInfo[] = ride.passengers.map(
+          (passengerId) => ({
+            id: passengerId,
+            isCreator: passengerId === ride.creator,
+            contactPhone:
+              passengerId === ride.creator ? ride.contactPhone : undefined,
+          })
+        );
+        setPassengers(fallbackPassengers);
+      }
+    };
+
+    if (ride.id) {
+      fetchPassengersInfo();
+    }
+  }, [ride.id, ride.creator, ride.passengers, ride.contactPhone]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -73,9 +137,14 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
     }
   };
 
-  const handleJoinRide = async () => {
+  const handleJoinRideClick = () => {
+    setShowPhoneModal(true);
+  };
+
+  const handlePhoneSubmit = async (phoneNumber: string) => {
+    setShowPhoneModal(false);
     try {
-      await joinRideRequest(ride.id);
+      await joinRideRequest(ride.id, phoneNumber);
       addNotification(
         `You have joined a ride to ${ride.destination.address}.`,
         "join",
@@ -158,7 +227,7 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
                   </div>
                 </div>
 
-                <div className="flex items-start">
+                <div className="flex items-start mb-4">
                   <Navigation className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
                   <div>
                     <p className="text-xs text-gray-500 font-medium">
@@ -167,6 +236,49 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
                     <p className="text-gray-800">{ride.destination.address}</p>
                   </div>
                 </div>
+
+                {/* Creator's phone number (if available) */}
+                {ride.contactPhone && (
+                  <div className="flex items-start mb-4">
+                    <Phone className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <p className="text-xs text-gray-500 font-medium">
+                        CREATOR'S CONTACT NUMBER
+                      </p>
+                      <p className="text-gray-800">{ride.contactPhone}</p>
+                      {!isCreator && (
+                        <p className="text-xs text-gray-500 mt-0.5">
+                          Call this number to coordinate with the ride creator
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Try to find creator phone from passengers list if not available on ride object */}
+                {!ride.contactPhone && passengers.length > 0 && (
+                  <>
+                    {passengers.find((p) => p.isCreator && p.contactPhone) && (
+                      <div className="flex items-start mb-4">
+                        <Phone className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
+                        <div>
+                          <p className="text-xs text-gray-500 font-medium">
+                            CREATOR'S CONTACT NUMBER
+                          </p>
+                          <p className="text-gray-800">
+                            {passengers.find((p) => p.isCreator)?.contactPhone}
+                          </p>
+                          {!isCreator && (
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              Call this number to coordinate with the ride
+                              creator
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 
@@ -200,21 +312,26 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
                 </div>
 
                 <div className="space-y-3">
-                  {/* In a real app, you'd fetch and display actual passenger information */}
-                  {ride.passengers.map((passengerId, index) => (
+                  {passengers.map((passenger, index) => (
                     <div key={index} className="flex items-center">
                       <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-3">
                         <User className="h-4 w-4" />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="text-sm font-medium text-gray-800">
-                          {passengerId === ride.creator
+                          {passenger.isCreator
                             ? "Ride Creator"
                             : `Passenger ${index + 1}`}
                         </p>
-                        <p className="text-xs text-gray-500">
-                          {passengerId === ride.creator ? "(Creator)" : ""}
-                        </p>
+                        {passenger.contactPhone &&
+                          (isCreator || isPassenger) && (
+                            <div className="flex items-center mt-1">
+                              <Phone className="h-3 w-3 text-gray-500 mr-1" />
+                              <p className="text-xs text-gray-600">
+                                {passenger.contactPhone}
+                              </p>
+                            </div>
+                          )}
                       </div>
                     </div>
                   ))}
@@ -236,7 +353,7 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
             <div className="mt-6 flex flex-wrap gap-3">
               {canJoin && (
                 <button
-                  onClick={handleJoinRide}
+                  onClick={handleJoinRideClick}
                   className="px-4 py-2 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
                 >
                   Join This Ride
@@ -289,6 +406,13 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
           </div>
         </div>
       </div>
+
+      {/* Phone Number Modal */}
+      <PhoneNumberModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onSubmit={handlePhoneSubmit}
+      />
     </div>
   );
 };

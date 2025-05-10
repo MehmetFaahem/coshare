@@ -11,9 +11,10 @@ interface RideContextType {
   createRideRequest: (
     startingPoint: Location,
     destination: Location,
-    totalSeats: number
+    totalSeats: number,
+    contactPhone: string
   ) => Promise<RideRequest>;
-  joinRideRequest: (rideId: string) => Promise<void>;
+  joinRideRequest: (rideId: string, contactPhone: string) => Promise<void>;
   cancelRideRequest: (rideId: string) => Promise<void>;
   completeRideRequest: (rideId: string) => Promise<void>;
   findMatchingRides: (
@@ -146,7 +147,8 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
   const createRideRequest = async (
     startingPoint: Location,
     destination: Location,
-    totalSeats: number
+    totalSeats: number,
+    contactPhone: string
   ): Promise<RideRequest> => {
     if (!user) throw new Error("User must be logged in");
 
@@ -161,6 +163,7 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
           seats_available: totalSeats - 1, // Creator takes one seat
           total_seats: totalSeats,
           status: "open",
+          contact_phone: contactPhone,
         })
         .select()
         .single();
@@ -180,6 +183,7 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
         .insert({
           ride_id: rideData.id,
           user_id: user.id,
+          contact_phone: contactPhone,
         });
 
       if (passengerError) {
@@ -198,6 +202,7 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
         passengers: [user.id],
         status: "open",
         createdAt: rideData.created_at,
+        contactPhone: contactPhone,
       };
 
       // Update local state
@@ -215,7 +220,10 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const joinRideRequest = async (rideId: string): Promise<void> => {
+  const joinRideRequest = async (
+    rideId: string,
+    contactPhone: string
+  ): Promise<void> => {
     if (!user) throw new Error("User must be logged in");
 
     // Find ride
@@ -239,6 +247,7 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
         .insert({
           ride_id: rideId,
           user_id: user.id,
+          contact_phone: contactPhone,
         });
 
       if (passengerError) {

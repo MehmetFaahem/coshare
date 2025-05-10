@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { UserType } from "../types";
 import { supabase } from "../lib/supabase";
-import { signIn, signUp, signOut } from "../lib/auth";
+import { signIn, signUp, signOut, getCurrentSession } from "../lib/auth";
 import { getAuthTokenKey } from "../lib/sessionHelper";
 
 interface AuthContextType {
@@ -11,6 +11,8 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<unknown>;
   register: (name: string, email: string, password: string) => Promise<unknown>;
   logout: () => void;
+  isEmailConfirmed: boolean;
+  refreshSession: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,59 +20,72 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [user, setUser] = useState<UserType | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [user, setUserState] = useState<UserType | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEmailConfirmed, setIsEmailConfirmed] = useState(false);
 
-  // Function to set user state and log for debugging
-  const setUserState = (userData: UserType | null) => {
-    setUser(userData);
-    console.log("Auth state updated:", {
-      user: userData?.id,
-      isAuthenticated: !!userData,
-    });
+  // Function to refresh and synchronize session data
+  const refreshSession = async () => {
+    try {
+      console.log("Refreshing session data");
+      const session = await getCurrentSession();
+
+      if (session?.user) {
+        const userData = {
+          id: session.user.id,
+          name:
+            session.user.user_metadata?.name ||
+            session.user.user_metadata?.full_name ||
+            session.user.email?.split("@")[0] ||
+            "User",
+          email: session.user.email || "",
+        };
+
+        console.log("Session refreshed for user:", userData.id);
+        setUserState(userData);
+        setIsEmailConfirmed(session.user.email_confirmed_at !== null);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error refreshing session:", error);
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     // Check for authentication directly from localStorage
-    const checkAuth = () => {
+    const tokenKey = getAuthTokenKey();
+    const token = localStorage.getItem(tokenKey);
+
+    if (token) {
       try {
-        // Get token from localStorage
-        const tokenKey = getAuthTokenKey();
-        const tokenStr = localStorage.getItem(tokenKey);
+        const tokenData = JSON.parse(token);
+        if (tokenData.user) {
+          const userData = {
+            id: tokenData.user.id,
+            name:
+              tokenData.user.user_metadata?.name ||
+              tokenData.user.user_metadata?.full_name ||
+              tokenData.user.email?.split("@")[0] ||
+              "User",
+            email: tokenData.user.email || "",
+          };
+          setUserState(userData);
+          setIsEmailConfirmed(tokenData.user.email_confirmed_at !== null);
 
-        if (tokenStr) {
-          try {
-            const token = JSON.parse(tokenStr);
-
-            // If token exists, consider user authenticated
-            if (token.user && token.user.id) {
-              const tokenUser = {
-                id: token.user.id,
-                name:
-                  token.user.user_metadata?.name ||
-                  token.user.user_metadata?.full_name ||
-                  token.user.email?.split("@")[0] ||
-                  "User",
-                email: token.user.email || "",
-              };
-
-              console.log("User authenticated from token:", tokenUser.id);
-              setUserState(tokenUser);
-              return;
-            }
-          } catch (err) {
-            console.error("Error parsing token:", err);
-          }
+          // Refresh session to get the latest data
+          refreshSession();
         }
-
-        // No valid token, user is not authenticated
-        setUserState(null);
-      } finally {
-        setIsLoading(false);
+      } catch (error) {
+        console.error("Error parsing token:", error);
+        localStorage.removeItem(tokenKey);
       }
-    };
-
-    checkAuth();
+    } else {
+      setIsLoading(false);
+    }
 
     // Listen for auth state changes from Supabase
     const {
@@ -90,10 +105,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         };
         console.log("User signed in:", userData.id);
         setUserState(userData);
+        setIsEmailConfirmed(session.user.email_confirmed_at !== null);
+        setIsLoading(false);
       } else if (event === "SIGNED_OUT") {
         console.log("User signed out");
-        localStorage.removeItem(getAuthTokenKey());
+        localStorage.removeItem(tokenKey);
         setUserState(null);
+        setIsEmailConfirmed(false);
+        setIsLoading(false);
+      } else if (event === "USER_UPDATED") {
+        console.log("User updated, refreshing session");
+        refreshSession();
       }
     });
 
@@ -152,6 +174,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         login,
         register,
         logout,
+        isEmailConfirmed,
+        refreshSession,
       }}
     >
       {children}

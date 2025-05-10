@@ -59,6 +59,21 @@ export const signIn = async ({ email, password }: SignInCredentials) => {
 };
 
 export const signUp = async ({ email, password, name }: SignUpCredentials) => {
+  // First check if user already exists
+  const { data: existingUser } = await supabase
+    .from("users")
+    .select("id")
+    .eq("email", email)
+    .single();
+
+  if (existingUser) {
+    throw new Error("User already registered");
+  }
+
+  // Get the current site URL to build a proper redirect URL
+  const siteUrl = window.location.origin;
+  const redirectUrl = `${siteUrl}/auth/verify`;
+
   const result = await supabase.auth.signUp({
     email,
     password,
@@ -66,6 +81,7 @@ export const signUp = async ({ email, password, name }: SignUpCredentials) => {
       data: {
         name, // Store name in auth metadata
       },
+      emailRedirectTo: redirectUrl, // Redirect to our verification handler
     },
   });
 
@@ -95,15 +111,16 @@ export const signUp = async ({ email, password, name }: SignUpCredentials) => {
         name,
       });
 
-      if (profileError && profileError.code !== "23505") {
-        // Ignore duplicate key errors
+      if (profileError) {
         console.error("Failed to create user profile", profileError);
+        throw profileError;
       }
     }
   } catch (err: any) {
     // If error is not a "record not found" error, then log it
     if (err?.code !== "PGRST116") {
       console.error("Error checking/creating user profile:", err);
+      throw err;
     }
   }
 

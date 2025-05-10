@@ -26,6 +26,7 @@ export type RideRequest = {
   passengers: string[];
   status: RideStatus;
   createdAt: string;
+  contactPhone?: string;
 };
 
 export type Notification = {

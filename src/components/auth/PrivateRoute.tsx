@@ -8,7 +8,7 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isEmailConfirmed } = useAuth();
   const location = useLocation();
   const [hasToken, setHasToken] = useState(false);
 
@@ -24,14 +24,22 @@ const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
     }
   }, [isAuthenticated, location.pathname]);
 
-  // If authenticated or has token, render the protected component
-  if (isAuthenticated || hasToken) {
-    return <>{children}</>;
+  // If not authenticated or no token, redirect to login
+  if (!isAuthenticated && !hasToken) {
+    console.log("Access denied to protected route:", location.pathname);
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Otherwise redirect to login
-  console.log("Access denied to protected route:", location.pathname);
-  return <Navigate to="/login" state={{ from: location }} replace />;
+  // If authenticated but email not confirmed, redirect to email confirmation
+  if (isAuthenticated && !isEmailConfirmed) {
+    console.log("Email not confirmed, redirecting to confirmation page");
+    return (
+      <Navigate to="/email-confirmation" state={{ from: location }} replace />
+    );
+  }
+
+  // If authenticated and email confirmed, render the protected component
+  return <>{children}</>;
 };
 
 export default PrivateRoute;

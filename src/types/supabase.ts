@@ -43,6 +43,7 @@ export interface Database {
           status: string;
           created_at: string;
           updated_at: string;
+          contact_phone?: string;
         };
         Insert: {
           id?: string;
@@ -54,6 +55,7 @@ export interface Database {
           status?: string;
           created_at?: string;
           updated_at?: string;
+          contact_phone?: string;
         };
         Update: {
           id?: string;
@@ -65,6 +67,7 @@ export interface Database {
           status?: string;
           created_at?: string;
           updated_at?: string;
+          contact_phone?: string;
         };
       };
       ride_passengers: {
@@ -72,16 +75,19 @@ export interface Database {
           ride_id: string;
           user_id: string;
           joined_at: string;
+          contact_phone?: string;
         };
         Insert: {
           ride_id: string;
           user_id: string;
           joined_at?: string;
+          contact_phone?: string;
         };
         Update: {
           ride_id?: string;
           user_id?: string;
           joined_at?: string;
+          contact_phone?: string;
         };
       };
       notifications: {

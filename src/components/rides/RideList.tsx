@@ -1,9 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { RideRequest } from "../../types";
 import RideCard from "./RideCard";
 import { useRide } from "../../contexts/RideContext";
 import { toast } from "react-hot-toast";
 import { useNotification } from "../../contexts/NotificationContext";
+import PhoneNumberModal from "./PhoneNumberModal";
 
 interface RideListProps {
   rides: RideRequest[];
@@ -18,22 +19,34 @@ const RideList: React.FC<RideListProps> = ({
 }) => {
   const { joinRideRequest, cancelRideRequest, completeRideRequest } = useRide();
   const { addNotification } = useNotification();
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [selectedRideId, setSelectedRideId] = useState<string | null>(null);
 
-  const handleJoinRide = async (rideId: string) => {
+  const handleJoinClick = (rideId: string) => {
+    setSelectedRideId(rideId);
+    setShowPhoneModal(true);
+  };
+
+  const handlePhoneSubmit = async (phoneNumber: string) => {
+    if (!selectedRideId) return;
+
+    setShowPhoneModal(false);
     try {
-      await joinRideRequest(rideId);
-      const ride = rides.find((r) => r.id === rideId);
+      await joinRideRequest(selectedRideId, phoneNumber);
+      const ride = rides.find((r) => r.id === selectedRideId);
       if (ride) {
         addNotification(
           `You have joined a ride to ${ride.destination.address}.`,
           "join",
-          rideId
+          selectedRideId
         );
       }
       toast.success("Successfully joined the ride");
     } catch (error) {
       toast.error("Failed to join ride");
       console.error(error);
+    } finally {
+      setSelectedRideId(null);
     }
   };
 
@@ -82,16 +95,25 @@ const RideList: React.FC<RideListProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-      {rides.map((ride) => (
-        <RideCard
-          key={ride.id}
-          ride={ride}
-          onJoin={showActions ? handleJoinRide : undefined}
-          onCancel={showActions ? handleCancelRide : undefined}
-          onComplete={showActions ? handleCompleteRide : undefined}
-        />
-      ))}
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {rides.map((ride) => (
+          <RideCard
+            key={ride.id}
+            ride={ride}
+            onJoin={showActions ? handleJoinClick : undefined}
+            onCancel={showActions ? handleCancelRide : undefined}
+            onComplete={showActions ? handleCompleteRide : undefined}
+          />
+        ))}
+      </div>
+
+      {/* Phone Number Modal */}
+      <PhoneNumberModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onSubmit={handlePhoneSubmit}
+      />
     </div>
   );
 };

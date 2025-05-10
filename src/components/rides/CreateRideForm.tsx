@@ -5,12 +5,15 @@ import { toast } from "react-hot-toast";
 import { Location } from "../../types";
 import GlobalMap from "../map/GlobalMap";
 import { useNotification } from "../../contexts/NotificationContext";
+import PhoneNumberModal from "./PhoneNumberModal";
 
 const CreateRideForm: React.FC = () => {
   const [startingPoint, setStartingPoint] = useState<Location | null>(null);
   const [destination, setDestination] = useState<Location | null>(null);
   const [totalSeats, setTotalSeats] = useState<number>(2);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
 
   const { createRideRequest } = useRide();
   const { addNotification } = useNotification();
@@ -24,17 +27,25 @@ const CreateRideForm: React.FC = () => {
       return;
     }
 
+    // Show phone number modal instead of submitting directly
+    setShowPhoneModal(true);
+  };
+
+  const handlePhoneSubmit = async (phone: string) => {
+    setPhoneNumber(phone);
+    setShowPhoneModal(false);
     setIsSubmitting(true);
 
     try {
       const newRide = await createRideRequest(
-        startingPoint,
-        destination,
-        totalSeats
+        startingPoint!,
+        destination!,
+        totalSeats,
+        phone
       );
       toast.success("Ride request created successfully!");
       addNotification(
-        `Your ride request to ${destination.address} has been created.`,
+        `Your ride request to ${destination!.address} has been created.`,
         "system",
         newRide.id
       );
@@ -149,6 +160,13 @@ const CreateRideForm: React.FC = () => {
           </form>
         </div>
       </div>
+
+      {/* Phone Number Modal */}
+      <PhoneNumberModal
+        isOpen={showPhoneModal}
+        onClose={() => setShowPhoneModal(false)}
+        onSubmit={handlePhoneSubmit}
+      />
     </div>
   );
 };

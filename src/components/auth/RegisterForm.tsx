@@ -26,17 +26,18 @@ const RegisterForm: React.FC = () => {
 
     try {
       await register(name, email, password);
-      toast.success("Account created successfully!");
-      navigate("/dashboard");
+      toast.success(
+        "Account created successfully! Please check your email to confirm your account."
+      );
+      navigate("/email-confirmation", { state: { email } });
     } catch (error: any) {
       // Check for specific error types
-      if (error?.message?.includes("User already registered")) {
+      if (
+        error?.message?.includes("User already registered") ||
+        error?.code === "23505"
+      ) {
         toast.error("Email is already registered. Please sign in instead.");
-      } else if (error?.code === "23505") {
-        // This is a duplicate key error which can happen during registration
-        // In this case, the user might have been created successfully
-        toast.success("Account created successfully!");
-        navigate("/dashboard");
+        navigate("/login");
       } else {
         toast.error("Failed to create account");
         console.error(error);
