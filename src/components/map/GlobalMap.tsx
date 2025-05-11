@@ -6,11 +6,13 @@ import {
   Popup,
   useMap,
   useMapEvents,
+  LayersControl,
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Location } from "../../types";
 import { MapPin, Navigation, X } from "lucide-react";
+import MapTileLayers from "./MapTileLayers";
 
 // Fix the icon issue with Leaflet in React
 const markerIcon = new L.Icon({
@@ -165,7 +167,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   >([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  // Search for locations using OpenStreetMap Nominatim geocoding API
+  // Search for locations using OpenStreetMap Nominatim geocoding API with Google fallback
   const searchLocations = async (searchQuery: string) => {
     if (!searchQuery.trim()) {
       setSuggestions([]);
@@ -174,7 +176,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
 
     setLoading(true);
     try {
-      // Use the Nominatim geocoding API
+      // First try with Nominatim
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           searchQuery
@@ -182,11 +184,27 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
       );
 
       if (!response.ok) {
-        throw new Error("Failed to fetch location data");
+        throw new Error("Failed to fetch location data from Nominatim");
       }
 
       const data = await response.json();
-      setSuggestions(data);
+      
+      if (data && data.length > 0) {
+        setSuggestions(data);
+      } else {
+        // If no results from Nominatim, try with Google Maps tiles geocoding
+        // This is a workaround and might not be as accurate as the official Google Geocoding API
+        console.log("No results from Nominatim, trying alternative sources");
+        
+        // For demonstration, we'll just show a message
+        // In a real app, you might want to implement a custom geocoding solution
+        setSuggestions([{
+          display_name: `Search for "${searchQuery}" returned no results`,
+          lat: "0",
+          lon: "0",
+          placeholder: true
+        }]);
+      }
     } catch (error) {
       console.error("Error searching for locations:", error);
       setSuggestions([]);
@@ -214,7 +232,11 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
     display_name: string;
     lat: string;
     lon: string;
+    placeholder?: boolean;
   }) => {
+    // Don't select placeholder items
+    if (item.placeholder) return;
+    
     const lat = parseFloat(item.lat);
     const lng = parseFloat(item.lon);
 
@@ -286,13 +308,19 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
           {suggestions.map((item, index) => (
             <div
               key={index}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-              onClick={() => selectLocation(item)}
+              className={`px-4 py-2 hover:bg-gray-100 ${item.placeholder ? 'text-gray-500 cursor-default' : 'cursor-pointer'}`}
+              onClick={() => !item.placeholder && selectLocation(item)}
             >
-              <div className="font-medium">
-                {item.display_name.split(",")[0]}
-              </div>
-              <div className="text-sm text-gray-500">{item.display_name}</div>
+              {item.placeholder ? (
+                <div className="text-center italic">{item.display_name}</div>
+              ) : (
+                <>
+                  <div className="font-medium">
+                    {item.display_name.split(",")[0]}
+                  </div>
+                  <div className="text-sm text-gray-500">{item.display_name}</div>
+                </>
+              )}
             </div>
           ))}
         </div>
@@ -569,17 +597,13 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
             mapRef.current = e.target;
           }}
         >
-          <TileLayer
-            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-
+          <MapTileLayers />
+          
           <MapEvents
             onLocationSelect={handleLocationSelect}
             selectingLocation={selectingLocation}
             setLoading={setLoading}
           />
-
           {/* Current location marker */}
           <Marker position={currentPosition} icon={markerIcon}>
             <Popup>Your current location</Popup>

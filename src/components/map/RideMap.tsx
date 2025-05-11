@@ -6,11 +6,13 @@ import {
   Popup,
   useMap,
   useMapEvents,
+  LayersControl,
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { Location, RideRequest } from "../../types";
 import { MapPin, Navigation } from "lucide-react";
+import MapTileLayers from "./MapTileLayers";
 
 // Fix the icon issue with Leaflet in React
 const markerIcon = new L.Icon({
@@ -167,11 +169,8 @@ const RideMap: React.FC<RideMapProps> = ({
         zoom={13}
         style={{ height: "100%", width: "100%", borderRadius: "8px" }}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-
+        <MapTileLayers />
+        
         <RecenterAutomatically position={currentPosition} />
         <MapClickHandler
           onLocationSelect={onLocationSelect}
@@ -255,25 +254,6 @@ const RideMap: React.FC<RideMapProps> = ({
           </React.Fragment>
         ))}
       </MapContainer>
-
-      {/* Map controls */}
-      <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
-        <button
-          className="bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors"
-          onClick={() => {
-            if ("geolocation" in navigator) {
-              navigator.geolocation.getCurrentPosition((position) => {
-                setCurrentPosition([
-                  position.coords.latitude,
-                  position.coords.longitude,
-                ]);
-              });
-            }
-          }}
-        >
-          <Navigation className="h-5 w-5 text-gray-700" />
-        </button>
-      </div>
     </div>
   );
 };
