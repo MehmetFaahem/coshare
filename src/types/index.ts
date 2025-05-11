@@ -35,6 +35,6 @@ export type Notification = {
   message: string;
   read: boolean;
   createdAt: string;
-  type: "match" | "update" | "join" | "system";
+  type: "match" | "update" | "join" | "system" | "leave";
   rideId?: string;
 };

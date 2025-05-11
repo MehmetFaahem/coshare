@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.39.7",
     "@types/lodash": "^4.17.16",
+    "ably": "^1.2.48",
     "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
     "lucide-react": "^0.344.0",
@@ -20,7 +21,6 @@
     "react-hot-toast": "^2.4.1",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^6.22.0",
-    "socket.io-client": "^4.7.4",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { RideRequest, Location, RideStatus } from "../types";
 import { useAuth } from "./AuthContext";
-import { useSocket } from "./SocketContext";
+import { useAbly } from "./AblyContext";
 import { supabase } from "../lib/supabase";
 
 interface RideContextType {
@@ -31,7 +31,7 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
   const [rides, setRides] = useState<RideRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
-  const { socket } = useSocket();
+  const { publishEvent } = useAbly();
 
   // Load rides from Supabase
   useEffect(() => {
@@ -208,10 +208,8 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
       // Update local state
       setRides((prevRides) => [...prevRides, newRide]);
 
-      // Emit socket event for real-time updates
-      if (socket) {
-        socket.emit("ride:new", newRide);
-      }
+      // Emit Ably event for real-time updates
+      publishEvent("rides", "new", newRide);
 
       return newRide;
     } catch (error) {
@@ -286,11 +284,9 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
         prevRides.map((r) => (r.id === rideId ? updatedRide : r))
       );
 
-      // Emit socket event
-      if (socket) {
-        socket.emit("ride:update", updatedRide);
-        socket.emit("ride:join", updatedRide);
-      }
+      // Emit Ably events
+      publishEvent("rides", "update", updatedRide);
+      publishEvent("rides", "join", updatedRide);
     } catch (error) {
       console.error("Error joining ride:", error);
       throw error;
@@ -337,10 +333,8 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
           prevRides.map((r) => (r.id === rideId ? updatedRide : r))
         );
 
-        // Emit socket event
-        if (socket) {
-          socket.emit("ride:update", updatedRide);
-        }
+        // Emit Ably event
+        publishEvent("rides", "update", updatedRide);
       } else {
         // If user is just a passenger, remove them from the ride
         const { error: passengerError } = await supabase
@@ -384,9 +378,12 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
           prevRides.map((r) => (r.id === rideId ? updatedRide : r))
         );
 
-        // Emit socket event
-        if (socket) {
-          socket.emit("ride:update", updatedRide);
+        // Emit Ably event
+        publishEvent("rides", "update", updatedRide);
+
+        // If user was a passenger and not the creator, emit leave event
+        if (ride.creator !== user.id && ride.passengers.includes(user.id)) {
+          publishEvent("rides", "leave", updatedRide);
         }
       }
     } catch (error) {
@@ -435,10 +432,8 @@ export const RideProvider: React.FC<{ children: React.ReactNode }> = ({
         prevRides.map((r) => (r.id === rideId ? updatedRide : r))
       );
 
-      // Emit socket event
-      if (socket) {
-        socket.emit("ride:update", updatedRide);
-      }
+      // Emit Ably event
+      publishEvent("rides", "update", updatedRide);
     } catch (error) {
       console.error("Error completing ride:", error);
       throw error;

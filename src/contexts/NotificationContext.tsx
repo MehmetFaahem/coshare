@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { Notification } from "../types";
+import { Notification, RideRequest } from "../types";
 import { useAuth } from "./AuthContext";
-import { useSocket } from "./SocketContext";
+import { useAbly } from "./AblyContext";
 import { toast } from "react-hot-toast";
 import { supabase } from "../lib/supabase";
+import * as Ably from "ably";
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -26,7 +27,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const { user } = useAuth();
-  const { socket } = useSocket();
+  const { subscribeToEvent } = useAbly();
 
   // Load notifications from Supabase
   useEffect(() => {
@@ -91,34 +92,57 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, [user]);
 
-  // Listen for socket events that would trigger notifications
+  // Listen for Ably events that would trigger notifications
   useEffect(() => {
-    if (!socket || !user) return;
+    if (!user) return;
 
-    const handleRideUpdate = (data: any) => {
+    const handleRideUpdate = (message: Ably.Types.Message) => {
+      const data = message.data as RideRequest;
       // Check if the user is part of this ride
       if (data.creator === user.id || data.passengers.includes(user.id)) {
-        const message = `Ride to ${data.destination.address} has been updated.`;
-        addNotification(message, "update", data.id);
+        const notificationMessage = `Ride to ${data.destination.address} has been updated.`;
+        addNotification(notificationMessage, "update", data.id);
       }
     };
 
-    const handleRideJoin = (data: any) => {
+    const handleRideJoin = (message: Ably.Types.Message) => {
+      const data = message.data as RideRequest;
       // If the user is the creator, notify them when someone joins
       if (data.creator === user.id) {
-        const message = `A new passenger has joined your ride to ${data.destination.address}.`;
-        addNotification(message, "join", data.id);
+        const notificationMessage = `A new passenger has joined your ride to ${data.destination.address}.`;
+        addNotification(notificationMessage, "join", data.id);
       }
     };
 
-    socket.on("ride:update", handleRideUpdate);
-    socket.on("ride:join", handleRideJoin);
+    const handleRideLeave = (message: Ably.Types.Message) => {
+      const data = message.data as RideRequest;
+      // If the user is the creator, notify them when someone leaves
+      if (data.creator === user.id) {
+        const notificationMessage = `A passenger has left your ride to ${data.destination.address}.`;
+        // Now we can use "leave" type properly
+        addNotification(notificationMessage, "leave", data.id);
+      }
+    };
+
+    // Subscribe to ride events on the "rides" channel
+    const unsubscribeUpdate = subscribeToEvent(
+      "rides",
+      "update",
+      handleRideUpdate
+    );
+    const unsubscribeJoin = subscribeToEvent("rides", "join", handleRideJoin);
+    const unsubscribeLeave = subscribeToEvent(
+      "rides",
+      "leave",
+      handleRideLeave
+    );
 
     return () => {
-      socket.off("ride:update", handleRideUpdate);
-      socket.off("ride:join", handleRideJoin);
+      unsubscribeUpdate();
+      unsubscribeJoin();
+      unsubscribeLeave();
     };
-  }, [socket, user]);
+  }, [user, subscribeToEvent]);
 
   const unreadCount = notifications.filter(
     (notification) => !notification.read
@@ -171,7 +195,14 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Show toast notification
       toast(message, {
-        icon: type === "match" ? "🔍" : type === "join" ? "👤" : "🔔",
+        icon:
+          type === "match"
+            ? "🔍"
+            : type === "join"
+            ? "👤"
+            : type === "leave"
+            ? "👋"
+            : "🔔",
         duration: 4000,
       });
     } catch (error) {

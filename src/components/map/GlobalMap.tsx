@@ -188,22 +188,24 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
       }
 
       const data = await response.json();
-      
+
       if (data && data.length > 0) {
         setSuggestions(data);
       } else {
         // If no results from Nominatim, try with Google Maps tiles geocoding
         // This is a workaround and might not be as accurate as the official Google Geocoding API
         console.log("No results from Nominatim, trying alternative sources");
-        
+
         // For demonstration, we'll just show a message
         // In a real app, you might want to implement a custom geocoding solution
-        setSuggestions([{
-          display_name: `Search for "${searchQuery}" returned no results`,
-          lat: "0",
-          lon: "0",
-          placeholder: true
-        }]);
+        setSuggestions([
+          {
+            display_name: `Search for "${searchQuery}" returned no results`,
+            lat: "0",
+            lon: "0",
+            placeholder: true,
+          },
+        ]);
       }
     } catch (error) {
       console.error("Error searching for locations:", error);
@@ -236,7 +238,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   }) => {
     // Don't select placeholder items
     if (item.placeholder) return;
-    
+
     const lat = parseFloat(item.lat);
     const lng = parseFloat(item.lon);
 
@@ -308,7 +310,11 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
           {suggestions.map((item, index) => (
             <div
               key={index}
-              className={`px-4 py-2 hover:bg-gray-100 ${item.placeholder ? 'text-gray-500 cursor-default' : 'cursor-pointer'}`}
+              className={`px-4 py-2 hover:bg-gray-100 ${
+                item.placeholder
+                  ? "text-gray-500 cursor-default"
+                  : "cursor-pointer"
+              }`}
               onClick={() => !item.placeholder && selectLocation(item)}
             >
               {item.placeholder ? (
@@ -318,7 +324,9 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
                   <div className="font-medium">
                     {item.display_name.split(",")[0]}
                   </div>
-                  <div className="text-sm text-gray-500">{item.display_name}</div>
+                  <div className="text-sm text-gray-500">
+                    {item.display_name}
+                  </div>
                 </>
               )}
             </div>
@@ -598,7 +606,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
           }}
         >
           <MapTileLayers />
-          
+
           <MapEvents
             onLocationSelect={handleLocationSelect}
             selectingLocation={selectingLocation}

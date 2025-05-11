@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRide } from "../../contexts/RideContext";
+import { useAbly } from "../../contexts/AblyContext";
 import { Search } from "lucide-react";
 import { Location, RideRequest } from "../../types";
 import GlobalMap from "../map/GlobalMap";
@@ -12,6 +13,49 @@ const FindRideForm: React.FC = () => {
   const [searched, setSearched] = useState(false);
 
   const { findMatchingRides } = useRide();
+  const { subscribeToEvent } = useAbly();
+
+  // Subscribe to real-time updates for all rides
+  useEffect(() => {
+    if (!searched || !startingPoint || !destination) return;
+
+    const updateMatchingRides = () => {
+      // Re-run the search with the same criteria to get updated results
+      const updatedRides = findMatchingRides(startingPoint, destination);
+      setMatchingRides(updatedRides);
+    };
+
+    const handleRideEvent = () => {
+      updateMatchingRides();
+    };
+
+    // Subscribe to all ride events that might affect our results
+    const unsubscribeNew = subscribeToEvent("rides", "new", handleRideEvent);
+    const unsubscribeUpdate = subscribeToEvent(
+      "rides",
+      "update",
+      handleRideEvent
+    );
+    const unsubscribeJoin = subscribeToEvent("rides", "join", handleRideEvent);
+    const unsubscribeLeave = subscribeToEvent(
+      "rides",
+      "leave",
+      handleRideEvent
+    );
+
+    return () => {
+      unsubscribeNew();
+      unsubscribeUpdate();
+      unsubscribeJoin();
+      unsubscribeLeave();
+    };
+  }, [
+    searched,
+    startingPoint,
+    destination,
+    findMatchingRides,
+    subscribeToEvent,
+  ]);
 
   const handleSearch = () => {
     if (!startingPoint || !destination) return;

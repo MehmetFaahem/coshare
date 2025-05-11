@@ -11,8 +11,7 @@ import { Toaster } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { RideProvider } from "./contexts/RideContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
-import { SocketProvider } from "./contexts/SocketContext";
-import PrivateRoute from "./components/auth/PrivateRoute";
+import { AblyProvider } from "./contexts/AblyContext";
 import { toast } from "react-hot-toast";
 
 // Pages
@@ -27,6 +26,7 @@ import EmailConfirmationPage from "./pages/EmailConfirmationPage";
 
 // Add custom styles for leaflet markers
 import "./index.css";
+import PrivateRoute from "./components/auth/PrivateRoute";
 
 // Component to handle email verification callback
 const VerifyEmail = () => {
@@ -63,7 +63,7 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <SocketProvider>
+        <AblyProvider>
           <RideProvider>
             <NotificationProvider>
               <Toaster
@@ -140,7 +140,7 @@ function App() {
               </Routes>
             </NotificationProvider>
           </RideProvider>
-        </SocketProvider>
+        </AblyProvider>
       </AuthProvider>
     </Router>
   );

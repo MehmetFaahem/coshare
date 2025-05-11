@@ -11,7 +11,7 @@ Rickshaw Share is a modern web application built with React and TypeScript, util
 - **Build Tool:** Vite
 - **Styling:** TailwindCSS
 - **Database/Backend:** Supabase
-- **Real-time Communication:** Socket.IO
+- **Real-time Communication:** Ably
 - **Mapping:** Leaflet with React-Leaflet
 - **Routing:** React Router DOM
 - **UI Components:** Lucide React
@@ -37,7 +37,7 @@ project/
 
 ## Key Features
 
-- Real-time location tracking (using `Socket.IO`)
+- Real-time location tracking and notifications (using `Ably`)
 - Interactive maps (using `Leaflet`)
 - Database integration (using `Supabase`)
 - Type-safe development (using `TypeScript`)
@@ -66,7 +66,7 @@ npm run preview
 
 - **@supabase/supabase-js:** Database and authentication
 - **leaflet & react-leaflet:** Map functionality
-- **socket.io-client:** Real-time communication
+- **ably:** Real-time communication
 - **react-router-dom:** Application routing
 - **react-hot-toast:** Toast notifications
 - **uuid:** Unique identifier generation

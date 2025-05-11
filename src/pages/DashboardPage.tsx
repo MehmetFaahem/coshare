@@ -3,20 +3,121 @@ import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { useAuth } from "../contexts/AuthContext";
 import { useRide } from "../contexts/RideContext";
+import { useAbly } from "../contexts/AblyContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Users, Plus, MapPin, ChevronsRight } from "lucide-react";
 import RideList from "../components/rides/RideList";
 import { getAuthTokenKey } from "../lib/sessionHelper";
+import { RideRequest } from "../types";
 
 const DashboardPage: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
   const { userRides, rides } = useRide();
+  const { subscribeToEvent } = useAbly();
   const navigate = useNavigate();
   const [tokenUser, setTokenUser] = useState<{
     id: string;
     name: string;
     email: string;
   } | null>(null);
+  const [dashboardRides, setDashboardRides] = useState<RideRequest[]>([]);
+  const [dashboardUserRides, setDashboardUserRides] = useState<RideRequest[]>(
+    []
+  );
+
+  // Update local state when the rides context changes
+  useEffect(() => {
+    setDashboardRides(rides);
+    setDashboardUserRides(userRides);
+  }, [rides, userRides]);
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const activeUser = user || tokenUser;
+    if (!activeUser) return;
+
+    const handleRideUpdate = (message: { data: RideRequest }) => {
+      const updatedRide = message.data;
+
+      // Update rides list
+      setDashboardRides((prevRides) =>
+        prevRides.map((ride) =>
+          ride.id === updatedRide.id ? updatedRide : ride
+        )
+      );
+
+      // Check if this is a user ride
+      const isUserRide =
+        updatedRide.creator === activeUser.id ||
+        updatedRide.passengers.includes(activeUser.id);
+
+      if (isUserRide) {
+        setDashboardUserRides((prevUserRides) => {
+          // Check if ride already exists in user rides
+          const rideExists = prevUserRides.some(
+            (ride) => ride.id === updatedRide.id
+          );
+
+          if (rideExists) {
+            // Update existing ride
+            return prevUserRides.map((ride) =>
+              ride.id === updatedRide.id ? updatedRide : ride
+            );
+          } else {
+            // Add new ride
+            return [...prevUserRides, updatedRide];
+          }
+        });
+      }
+    };
+
+    const handleNewRide = (message: { data: RideRequest }) => {
+      const newRide = message.data;
+
+      // Add to rides list if it's not already there
+      setDashboardRides((prevRides) => {
+        if (prevRides.some((ride) => ride.id === newRide.id)) {
+          return prevRides;
+        }
+        return [...prevRides, newRide];
+      });
+
+      // Check if this is a user ride
+      const isUserRide =
+        newRide.creator === activeUser.id ||
+        newRide.passengers.includes(activeUser.id);
+
+      if (isUserRide) {
+        setDashboardUserRides((prevUserRides) => {
+          if (prevUserRides.some((ride) => ride.id === newRide.id)) {
+            return prevUserRides;
+          }
+          return [...prevUserRides, newRide];
+        });
+      }
+    };
+
+    // Subscribe to ride events
+    const unsubscribeUpdate = subscribeToEvent(
+      "rides",
+      "update",
+      handleRideUpdate
+    );
+    const unsubscribeJoin = subscribeToEvent("rides", "join", handleRideUpdate);
+    const unsubscribeLeave = subscribeToEvent(
+      "rides",
+      "leave",
+      handleRideUpdate
+    );
+    const unsubscribeNew = subscribeToEvent("rides", "new", handleNewRide);
+
+    return () => {
+      unsubscribeUpdate();
+      unsubscribeJoin();
+      unsubscribeLeave();
+      unsubscribeNew();
+    };
+  }, [user, tokenUser, subscribeToEvent]);
 
   // Check for token directly
   useEffect(() => {
@@ -79,17 +180,21 @@ const DashboardPage: React.FC = () => {
   }
 
   // Find active and past rides
-  const activeRides = userRides.filter(
+  const activeRides = dashboardUserRides.filter(
     (ride) => ride.status === "open" || ride.status === "full"
   );
-  const pastRides = userRides.filter(
+  const pastRides = dashboardUserRides.filter(
     (ride) => ride.status === "completed" || ride.status === "cancelled"
   );
 
   // Calculate stats
-  const totalRides = userRides.length;
-  const completedRides = userRides.filter(
+  const totalRides = dashboardUserRides.length;
+  const completedRides = dashboardUserRides.filter(
     (ride) => ride.status === "completed"
+  ).length;
+  const availableRides = dashboardRides.filter(
+    (r) =>
+      r.status === "open" && !dashboardUserRides.some((ur) => ur.id === r.id)
   ).length;
 
   // Main dashboard content
@@ -206,13 +311,7 @@ const DashboardPage: React.FC = () => {
                     Available Rides
                   </p>
                   <p className="text-2xl font-bold text-gray-800">
-                    {
-                      rides.filter(
-                        (r) =>
-                          r.status === "open" &&
-                          !userRides.some((ur) => ur.id === r.id)
-                      ).length
-                    }
+                    {availableRides}
                   </p>
                 </div>
               </div>
