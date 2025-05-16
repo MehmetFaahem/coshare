@@ -89,6 +89,9 @@ const PhoneNumberModal: React.FC<PhoneNumberModalProps> = ({
           </button>
           <button
             type="submit"
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
             className="px-4 py-2 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
           >
             Submit

@@ -363,7 +363,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
 }) => {
   const [currentPosition, setCurrentPosition] = useState<[number, number]>([
     23.8041, 90.4152,
-  ]); // Default to Delhi
+  ]); // Default to Dhaka
 
   const [selectingLocation, setSelectingLocation] = useState<
     "start" | "destination" | null
@@ -557,7 +557,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
             className={`flex-1 px-3 py-2 border rounded-md ${
               selectingLocation === "start"
                 ? "bg-emerald-600 text-white"
-                : "bg-white text-gray-700"
+                : "bg-emerald-900 text-white"
             }`}
             onClick={() =>
               setSelectingLocation(
@@ -565,9 +565,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
               )
             }
           >
-            {selectingLocation === "start"
-              ? "Cancel"
-              : "Select starting point on map"}
+            {selectingLocation === "start" ? "Cancel" : "Select starting point"}
           </button>
 
           <button
@@ -575,7 +573,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
             className={`flex-1 px-3 py-2 border rounded-md ${
               selectingLocation === "destination"
                 ? "bg-emerald-600 text-white"
-                : "bg-white text-gray-700"
+                : "bg-black text-white"
             }`}
             onClick={() =>
               setSelectingLocation(
@@ -585,7 +583,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
           >
             {selectingLocation === "destination"
               ? "Cancel"
-              : "Select destination on map"}
+              : "Select destination"}
           </button>
         </div>
       </div>

@@ -1,4 +1,3 @@
-And when an user join a ride, notification should be sent to the ride creator, also send if leave after join
 Also send notification to all joined ride passengers when a ride is completed or cancelled
 Real time notifications sending via web-push
 

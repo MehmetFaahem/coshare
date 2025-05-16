@@ -24,7 +24,12 @@ interface PassengerInfo {
 
 const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
   const { user } = useAuth();
-  const { joinRideRequest, cancelRideRequest, completeRideRequest } = useRide();
+  const {
+    joinRideRequest,
+    cancelRideRequest,
+    completeRideRequest,
+    syncRideStatus,
+  } = useRide();
   const { addNotification } = useNotification();
   const { subscribeToEvent } = useAbly();
   const navigate = useNavigate();
@@ -35,6 +40,17 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
   const isPassenger = user && ride.passengers.includes(user.id);
   const canJoin =
     user && !isPassenger && ride.status === "open" && ride.seatsAvailable > 0;
+  const canLeaveOrCancel =
+    isPassenger && ride.status !== "completed" && ride.status !== "cancelled";
+  const canComplete =
+    isCreator && ride.status !== "completed" && ride.status !== "cancelled";
+
+  // Sync ride status when component mounts
+  useEffect(() => {
+    if (ride.id) {
+      syncRideStatus(ride.id);
+    }
+  }, [ride.id, syncRideStatus]);
 
   // Fetch passengers with phone numbers
   useEffect(() => {
@@ -140,12 +156,17 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
   };
 
   const handleJoinRideClick = () => {
-    setShowPhoneModal(true);
+    // Sync status before showing join modal
+    syncRideStatus(ride.id).then(() => {
+      setShowPhoneModal(true);
+    });
   };
 
   const handlePhoneSubmit = async (phoneNumber: string) => {
     setShowPhoneModal(false);
     try {
+      // Sync status before joining
+      await syncRideStatus(ride.id);
       await joinRideRequest(ride.id, phoneNumber);
       addNotification(
         `You have joined a ride to ${ride.destination.address}.`,
@@ -162,6 +183,8 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
 
   const handleCancelRide = async () => {
     try {
+      // Sync status before cancelling
+      await syncRideStatus(ride.id);
       await cancelRideRequest(ride.id);
       addNotification(
         `You have cancelled your ride to ${ride.destination.address}.`,
@@ -171,13 +194,17 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
       toast.success("Ride cancelled successfully");
       navigate("/dashboard");
     } catch (error) {
-      toast.error("Failed to cancel ride");
+      toast.error(
+        "Failed to cancel ride. The ride might have already been completed."
+      );
       console.error(error);
     }
   };
 
   const handleCompleteRide = async () => {
     try {
+      // Sync status before completing
+      await syncRideStatus(ride.id);
       await completeRideRequest(ride.id);
       addNotification(
         `Your ride to ${ride.destination.address} has been completed.`,
@@ -362,27 +389,23 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
                 </button>
               )}
 
-              {isPassenger &&
-                ride.status !== "completed" &&
-                ride.status !== "cancelled" && (
-                  <button
-                    onClick={handleCancelRide}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                  >
-                    {isCreator ? "Cancel Ride" : "Leave Ride"}
-                  </button>
-                )}
+              {canLeaveOrCancel && (
+                <button
+                  onClick={handleCancelRide}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                >
+                  {isCreator ? "Cancel Ride" : "Leave Ride"}
+                </button>
+              )}
 
-              {isCreator &&
-                ride.status !== "completed" &&
-                ride.status !== "cancelled" && (
-                  <button
-                    onClick={handleCompleteRide}
-                    className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Mark as Completed
-                  </button>
-                )}
+              {canComplete && (
+                <button
+                  onClick={handleCompleteRide}
+                  className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Mark as Completed
+                </button>
+              )}
 
               <button
                 onClick={() => navigate(-1)}

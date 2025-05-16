@@ -1,5 +1,5 @@
 import { supabase } from "./supabase";
-import { RideRequest, Notification, Location, RideStatus } from "../types";
+import { Location, RideStatus } from "../types";
 
 // Rides related functions
 export const fetchAllRides = async () => {
@@ -62,6 +62,20 @@ export const fetchRidePassengers = async (rideId: string) => {
   }
 
   return data?.map((p) => p.user_id) || [];
+};
+
+export const fetchRidePassengersWithDetails = async (rideId: string) => {
+  const { data, error } = await supabase
+    .from("ride_passengers")
+    .select("user_id, contact_phone")
+    .eq("ride_id", rideId);
+
+  if (error) {
+    console.error(`Error fetching passengers for ride ${rideId}:`, error);
+    throw error;
+  }
+
+  return data || [];
 };
 
 export const createRide = async (
@@ -225,6 +239,78 @@ export const markAllNotificationsAsRead = async (userId: string) => {
 
   if (error) {
     console.error("Error marking all notifications as read:", error);
+    throw error;
+  }
+};
+
+export const updateRideStatus = async (
+  rideId: string,
+  status: RideStatus,
+  preserveFields = true
+) => {
+  try {
+    console.log(`Updating ride ${rideId} status to ${status}`);
+
+    // First, get the current ride data if we want to preserve fields
+    let existingData = {};
+    if (preserveFields) {
+      try {
+        const { data, error } = await supabase
+          .from("ride_requests")
+          .select("*")
+          .eq("id", rideId)
+          .single();
+
+        if (error) {
+          console.error("Error fetching ride for status update:", error);
+          // Continue with minimal data instead of throwing
+          console.log("Will proceed with minimal data for update");
+        } else if (data) {
+          existingData = data;
+
+          // Protection: Don't allow completed or cancelled rides to change back to open
+          if (
+            (data.status === "completed" || data.status === "cancelled") &&
+            (status === "open" || status === "full")
+          ) {
+            console.warn(
+              `Prevented changing ride ${rideId} from ${data.status} to ${status}`
+            );
+            return data; // Return existing data without making changes
+          }
+        }
+      } catch (fetchError) {
+        console.error("Failed to fetch ride data:", fetchError);
+        // Continue with minimal data instead of throwing
+        console.log("Will proceed with minimal data for update");
+      }
+    }
+
+    // Ensure we at least have the required fields
+    const updateData = {
+      ...existingData,
+      id: rideId,
+      status,
+    };
+
+    // Update the ride status - use upsert (PUT) instead of update (PATCH) to avoid CORS issues
+    const { data, error } = await supabase
+      .from("ride_requests")
+      .upsert(updateData)
+      .select();
+
+    if (error) {
+      console.error(
+        `Error updating ride ${rideId} status to ${status}:`,
+        error
+      );
+      throw error;
+    }
+
+    console.log(`Successfully updated ride ${rideId} status to ${status}`);
+    return data?.[0] || updateData;
+  } catch (error) {
+    console.error(`Failed to update ride ${rideId} status:`, error);
     throw error;
   }
 };

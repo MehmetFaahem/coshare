@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRide } from "../../contexts/RideContext";
 import { useAbly } from "../../contexts/AblyContext";
 import { Search } from "lucide-react";
@@ -12,57 +12,141 @@ const FindRideForm: React.FC = () => {
   const [matchingRides, setMatchingRides] = useState<RideRequest[]>([]);
   const [searched, setSearched] = useState(false);
 
-  const { findMatchingRides } = useRide();
+  const { findMatchingRides, refreshAllRides } = useRide();
   const { subscribeToEvent } = useAbly();
 
-  // Subscribe to real-time updates for all rides
-  useEffect(() => {
-    if (!searched || !startingPoint || !destination) return;
+  // Function to refresh matching rides
+  const refreshMatchingRides = useCallback(async () => {
+    if (searched && startingPoint && destination) {
+      console.log("Refreshing ride matches...");
 
-    const updateMatchingRides = () => {
-      // Re-run the search with the same criteria to get updated results
+      // First refresh the full database data to ensure we have the latest rides
+      await refreshAllRides();
+
+      // Then run the match algorithm
       const updatedRides = findMatchingRides(startingPoint, destination);
+      console.log(`Found ${updatedRides.length} matching rides`);
+
+      // Update the UI with the results
       setMatchingRides(updatedRides);
-    };
-
-    const handleRideEvent = () => {
-      updateMatchingRides();
-    };
-
-    // Subscribe to all ride events that might affect our results
-    const unsubscribeNew = subscribeToEvent("rides", "new", handleRideEvent);
-    const unsubscribeUpdate = subscribeToEvent(
-      "rides",
-      "update",
-      handleRideEvent
-    );
-    const unsubscribeJoin = subscribeToEvent("rides", "join", handleRideEvent);
-    const unsubscribeLeave = subscribeToEvent(
-      "rides",
-      "leave",
-      handleRideEvent
-    );
-
-    return () => {
-      unsubscribeNew();
-      unsubscribeUpdate();
-      unsubscribeJoin();
-      unsubscribeLeave();
-    };
+    }
   }, [
     searched,
     startingPoint,
     destination,
     findMatchingRides,
-    subscribeToEvent,
+    refreshAllRides,
   ]);
 
-  const handleSearch = () => {
+  // Always subscribe to ride updates regardless of search state
+  useEffect(() => {
+    console.log("Setting up real-time ride update subscriptions");
+
+    // Handle specific event types
+    const handleNewRide = (message: any) => {
+      console.log("New ride created event received");
+
+      if (
+        message.data &&
+        typeof message.data === "object" &&
+        "id" in message.data
+      ) {
+        console.log("New ride ID:", message.data.id);
+      }
+
+      // Force immediate refresh - very important when a new ride is created
+      refreshMatchingRides();
+    };
+
+    const handleUpdateRide = (message: any) => {
+      console.log("Ride update event received");
+      refreshMatchingRides();
+    };
+
+    const handleSyncEvent = (message: any) => {
+      console.log("Sync event received");
+
+      // Wait a moment to allow the database to update before refreshing
+      setTimeout(() => refreshMatchingRides(), 300);
+    };
+
+    const handleGenericEvent = () => {
+      refreshMatchingRides();
+    };
+
+    // Subscribe to all ride events that might affect our results
+    const unsubscribeNew = subscribeToEvent("rides", "new", handleNewRide);
+    const unsubscribeUpdate = subscribeToEvent(
+      "rides",
+      "update",
+      handleUpdateRide
+    );
+    const unsubscribeJoin = subscribeToEvent(
+      "rides",
+      "join",
+      handleGenericEvent
+    );
+    const unsubscribeLeave = subscribeToEvent(
+      "rides",
+      "leave",
+      handleGenericEvent
+    );
+    const unsubscribeSync = subscribeToEvent("rides", "sync", handleSyncEvent);
+
+    // Immediate refresh when subscriptions are set up
+    if (searched && startingPoint && destination) {
+      refreshMatchingRides();
+    }
+
+    return () => {
+      console.log("Cleaning up ride subscriptions");
+      unsubscribeNew();
+      unsubscribeUpdate();
+      unsubscribeJoin();
+      unsubscribeLeave();
+      unsubscribeSync();
+    };
+  }, [
+    refreshMatchingRides,
+    subscribeToEvent,
+    searched,
+    startingPoint,
+    destination,
+  ]);
+
+  // Refresh the ride list periodically to ensure we have the latest data
+  useEffect(() => {
+    if (!searched || !startingPoint || !destination) return;
+
+    console.log("Setting up periodic ride refresh interval");
+    const refreshInterval = setInterval(() => {
+      console.log("Periodic refresh triggered");
+      refreshMatchingRides();
+    }, 10000); // Refresh every 10 seconds
+
+    return () => {
+      console.log("Cleaning up periodic refresh interval");
+      clearInterval(refreshInterval);
+    };
+  }, [searched, startingPoint, destination, refreshMatchingRides]);
+
+  const handleSearch = async () => {
     if (!startingPoint || !destination) return;
 
+    console.log("Searching for matching rides...");
+
+    // First refresh all ride data to ensure we have the latest information
+    await refreshAllRides();
+
+    // Then run the matching algorithm
     const rides = findMatchingRides(startingPoint, destination);
     setMatchingRides(rides);
     setSearched(true);
+    console.log(`Initial search found ${rides.length} rides`);
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: "smooth",
+    });
   };
 
   return (

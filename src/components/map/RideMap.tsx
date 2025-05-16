@@ -125,7 +125,7 @@ interface RideMapProps {
 }
 
 const RideMap: React.FC<RideMapProps> = ({
-  initialPosition = [28.613939, 77.209021], // Default to Delhi
+  initialPosition = [23.8041, 90.4152], // Default to Dhaka
   rides = [],
   startingPoint,
   destination,
@@ -170,7 +170,7 @@ const RideMap: React.FC<RideMapProps> = ({
         style={{ height: "100%", width: "100%", borderRadius: "8px" }}
       >
         <MapTileLayers />
-        
+
         <RecenterAutomatically position={currentPosition} />
         <MapClickHandler
           onLocationSelect={onLocationSelect}

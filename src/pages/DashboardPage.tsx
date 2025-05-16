@@ -27,6 +27,13 @@ const DashboardPage: React.FC = () => {
 
   // Update local state when the rides context changes
   useEffect(() => {
+    console.log(
+      "Dashboard updating from context:",
+      rides.length,
+      "total rides,",
+      userRides.length,
+      "user rides"
+    );
     setDashboardRides(rides);
     setDashboardUserRides(userRides);
   }, [rides, userRides]);
@@ -38,13 +45,24 @@ const DashboardPage: React.FC = () => {
 
     const handleRideUpdate = (message: { data: RideRequest }) => {
       const updatedRide = message.data;
+      console.log(
+        "Dashboard received ride update:",
+        updatedRide.status,
+        updatedRide.id
+      );
 
       // Update rides list
-      setDashboardRides((prevRides) =>
-        prevRides.map((ride) =>
-          ride.id === updatedRide.id ? updatedRide : ride
-        )
-      );
+      setDashboardRides((prevRides) => {
+        // Replace the ride if it exists, otherwise add it
+        const exists = prevRides.some((ride) => ride.id === updatedRide.id);
+        if (exists) {
+          return prevRides.map((ride) =>
+            ride.id === updatedRide.id ? updatedRide : ride
+          );
+        } else {
+          return [...prevRides, updatedRide];
+        }
+      });
 
       // Check if this is a user ride
       const isUserRide =
@@ -52,6 +70,7 @@ const DashboardPage: React.FC = () => {
         updatedRide.passengers.includes(activeUser.id);
 
       if (isUserRide) {
+        console.log("Updating user ride in dashboard:", updatedRide.status);
         setDashboardUserRides((prevUserRides) => {
           // Check if ride already exists in user rides
           const rideExists = prevUserRides.some(

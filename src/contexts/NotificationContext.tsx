@@ -98,9 +98,25 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const handleRideUpdate = (message: Ably.Types.Message) => {
       const data = message.data as RideRequest;
+      console.log("Received ride update event:", data.status, data);
+
       // Check if the user is part of this ride
       if (data.creator === user.id || data.passengers.includes(user.id)) {
-        const notificationMessage = `Ride to ${data.destination.address} has been updated.`;
+        let notificationMessage = "";
+
+        // Different messages based on ride status
+        if (data.status === "completed") {
+          notificationMessage = `Your ride to ${data.destination.address} has been completed.`;
+        } else if (data.status === "cancelled") {
+          notificationMessage = `Your ride to ${data.destination.address} has been cancelled.`;
+        } else {
+          notificationMessage = `Ride to ${data.destination.address} has been updated.`;
+        }
+
+        console.log(
+          "Adding notification for ride update:",
+          notificationMessage
+        );
         addNotification(notificationMessage, "update", data.id);
       }
     };

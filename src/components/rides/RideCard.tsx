@@ -23,6 +23,10 @@ const RideCard: React.FC<RideCardProps> = ({
   const isPassenger = user && ride.passengers.includes(user.id);
   const canJoin =
     user && !isPassenger && ride.status === "open" && ride.seatsAvailable > 0;
+  const canLeaveOrCancel =
+    isPassenger && ride.status !== "completed" && ride.status !== "cancelled";
+  const canComplete =
+    isCreator && ride.status !== "completed" && ride.status !== "cancelled";
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -144,7 +148,11 @@ const RideCard: React.FC<RideCardProps> = ({
           {canJoin && onJoin && (
             <Link to={`/rides/${ride.id}`}>
               <button
-                onClick={() => onJoin(ride.id)}
+                onClick={() => {
+                  onJoin(ride.id);
+                  // Scroll to the top of the page
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
                 className="inline-flex items-center px-3 py-1.5 bg-emerald-600 text-white text-sm font-medium rounded-md hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
               >
                 Join Ride
@@ -152,32 +160,38 @@ const RideCard: React.FC<RideCardProps> = ({
             </Link>
           )}
 
-          {isPassenger &&
-            ride.status !== "completed" &&
-            ride.status !== "cancelled" &&
-            onCancel && (
-              <button
-                onClick={() => onCancel(ride.id)}
-                className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              >
-                {isCreator ? "Cancel Ride" : "Leave Ride"}
-              </button>
-            )}
+          {canLeaveOrCancel && onCancel && (
+            <button
+              onClick={() => {
+                onCancel(ride.id);
+                // Scroll to the top of the page
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            >
+              {isCreator ? "Cancel Ride" : "Leave Ride"}
+            </button>
+          )}
 
-          {isCreator &&
-            ride.status !== "completed" &&
-            ride.status !== "cancelled" &&
-            onComplete && (
-              <button
-                onClick={() => onComplete(ride.id)}
-                className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                Complete Ride
-              </button>
-            )}
+          {canComplete && onComplete && (
+            <button
+              onClick={() => {
+                onComplete(ride.id);
+                // Scroll to the top of the page
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Complete Ride
+            </button>
+          )}
 
           <Link
             to={`/rides/${ride.id}`}
+            onClick={() => {
+              // Scroll to the top of the page
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
             className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
           >
             View Details

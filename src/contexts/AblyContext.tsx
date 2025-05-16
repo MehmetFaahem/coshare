@@ -14,14 +14,25 @@ import { toast } from "react-hot-toast";
 const ABLY_API_KEY =
   "jmPaXA.TIfumw:U3-E3yMaUqokGhkVB0OPkhsqCldOzOYkTkNsLL9VRbw";
 
+// Define proper types for Ably messages
+interface AblyMessage {
+  name: string;
+  data: Record<string, unknown>;
+  id?: string;
+}
+
 interface AblyContextType {
   ably: Ably.Realtime | null;
   connected: boolean;
-  publishEvent: (channelName: string, eventName: string, data: any) => void;
+  publishEvent: (
+    channelName: string,
+    eventName: string,
+    data: Record<string, unknown>
+  ) => void;
   subscribeToEvent: (
     channelName: string,
     eventName: string,
-    callback: (message: Ably.Types.Message) => void
+    callback: (message: AblyMessage) => void
   ) => () => void;
 }
 
@@ -86,13 +97,21 @@ export const AblyProvider: React.FC<{ children: ReactNode }> = ({
   }, [user]);
 
   // Function to publish an event to a channel
-  const publishEvent = (channelName: string, eventName: string, data: any) => {
+  const publishEvent = (
+    channelName: string,
+    eventName: string,
+    data: Record<string, unknown>
+  ) => {
     if (!ably || !connected) {
       console.warn("Ably not connected, can't publish event");
       return;
     }
 
     try {
+      console.log(
+        `Publishing ${eventName} event to ${channelName} channel:`,
+        "id" in data ? `id: ${data.id}, status: ${data.status || "N/A"}` : data
+      );
       const channel = ably.channels.get(channelName);
       channel.publish(eventName, data);
     } catch (error) {
@@ -104,7 +123,7 @@ export const AblyProvider: React.FC<{ children: ReactNode }> = ({
   const subscribeToEvent = (
     channelName: string,
     eventName: string,
-    callback: (message: Ably.Types.Message) => void
+    callback: (message: AblyMessage) => void
   ) => {
     if (!ably) {
       console.warn("Ably not initialized, can't subscribe to event");
@@ -112,12 +131,41 @@ export const AblyProvider: React.FC<{ children: ReactNode }> = ({
     }
 
     try {
+      console.log(
+        `Subscribing to ${eventName} events on ${channelName} channel`
+      );
       const channel = ably.channels.get(channelName);
-      channel.subscribe(eventName, callback);
+
+      // Wrap the callback to add logging and type safety
+      const wrappedCallback = (message: any) => {
+        // Safe access to data properties
+        const data = message.data || {};
+        const eventId = data.id
+          ? `id: ${data.id}`
+          : JSON.stringify(data).substring(0, 100);
+
+        console.log(
+          `Received ${message.name} event on ${channelName} channel:`,
+          eventId
+        );
+
+        // Convert to our defined type
+        const typedMessage: AblyMessage = {
+          name: message.name,
+          data: message.data || {},
+        };
+
+        callback(typedMessage);
+      };
+
+      channel.subscribe(eventName, wrappedCallback);
 
       // Return unsubscribe function
       return () => {
-        channel.unsubscribe(eventName, callback);
+        console.log(
+          `Unsubscribing from ${eventName} events on ${channelName} channel`
+        );
+        channel.unsubscribe(eventName, wrappedCallback);
       };
     } catch (error) {
       console.error(`Error subscribing to event ${eventName}:`, error);
