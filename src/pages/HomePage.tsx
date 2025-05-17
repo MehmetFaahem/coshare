@@ -81,8 +81,8 @@ const HomePage: React.FC = () => {
                 How It Works
               </h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                RickshawShare makes it easy to find co-passengers and share
-                rides in just a few simple steps.
+                Sohojatra makes it easy to find co-passengers and share rides in
+                just a few simple steps.
               </p>
             </div>
 
@@ -245,21 +245,27 @@ const HomePage: React.FC = () => {
               </h2>
               <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                 Thousands of commuters are already saving money and time with
-                RickshawShare.
+                Sohojatra.
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex items-center mb-4">
-                  <div className="h-12 w-12 rounded-full bg-gray-200 mr-4"></div>
+                  <div className="h-12 w-12 rounded-full bg-gray-200 mr-4 relative">
+                    <img
+                      src="https://cdn.pixabay.com/photo/2017/11/10/05/46/group-2935521_1280.png"
+                      alt="User Avatar"
+                      className="rounded-full w-full h-full object-cover"
+                    />
+                  </div>
                   <div>
-                    <h4 className="font-semibold text-lg">Amit Sharma</h4>
+                    <h4 className="font-semibold text-lg">Aman</h4>
                     <p className="text-gray-500">Student</p>
                   </div>
                 </div>
                 <p className="text-gray-600">
-                  "I save almost ₹2000 every month by sharing rickshaws to
+                  "I save almost 2000 Taka every month by sharing rickshaws to
                   college. The app is super easy to use and I've made some good
                   friends too!"
                 </p>
@@ -267,9 +273,15 @@ const HomePage: React.FC = () => {
 
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex items-center mb-4">
-                  <div className="h-12 w-12 rounded-full bg-gray-200 mr-4"></div>
+                  <div className="h-12 w-12 rounded-full bg-gray-200 mr-4 relative">
+                    <img
+                      src="https://cdn.pixabay.com/photo/2017/11/10/05/46/group-2935521_1280.png"
+                      alt="User Avatar"
+                      className="rounded-full w-full h-full object-cover"
+                    />
+                  </div>
                   <div>
-                    <h4 className="font-semibold text-lg">Priya Patel</h4>
+                    <h4 className="font-semibold text-lg">Anika</h4>
                     <p className="text-gray-500">Office Worker</p>
                   </div>
                 </div>
@@ -282,9 +294,15 @@ const HomePage: React.FC = () => {
 
               <div className="bg-white p-6 rounded-lg shadow-md">
                 <div className="flex items-center mb-4">
-                  <div className="h-12 w-12 rounded-full bg-gray-200 mr-4"></div>
+                  <div className="h-12 w-12 rounded-full bg-gray-200 mr-4 relative">
+                    <img
+                      src="https://cdn.pixabay.com/photo/2017/11/10/05/46/group-2935521_1280.png"
+                      alt="User Avatar"
+                      className="rounded-full w-full h-full object-cover"
+                    />
+                  </div>
                   <div>
-                    <h4 className="font-semibold text-lg">Rahul Gupta</h4>
+                    <h4 className="font-semibold text-lg">Ashik</h4>
                     <p className="text-gray-500">IT Professional</p>
                   </div>
                 </div>
