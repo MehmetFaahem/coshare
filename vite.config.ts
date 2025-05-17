@@ -9,6 +9,12 @@ export default defineConfig({
   },
   base: "/",
   server: {
-    historyApiFallback: true,
+    port: 3000,
+    open: true,
+    proxy: {}, // Remove any conflicting proxies if they exist
+  },
+  preview: {
+    port: 3000,
+    open: true,
   },
 });

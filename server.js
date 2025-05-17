@@ -12,6 +12,11 @@ const port = process.env.PORT || 3000;
 // Serve static files from the dist directory
 app.use(express.static(join(__dirname, "dist")));
 
+// Important: Define specific routes for static assets first
+app.get("/assets/*", (req, res) => {
+  res.sendFile(join(__dirname, "dist", req.path));
+});
+
 // Implement the history API fallback - all requests not going to static files will be redirected to index.html
 app.get("*", (req, res) => {
   res.sendFile(join(__dirname, "dist", "index.html"));

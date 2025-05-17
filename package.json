@@ -14,7 +14,7 @@
     "@supabase/supabase-js": "^2.39.7",
     "@types/lodash": "^4.17.16",
     "ably": "^1.2.48",
-    "express": "^4.21.2",
+    "express": "^4.18.2",
     "leaflet": "^1.9.4",
     "lodash": "^4.17.21",
     "lucide-react": "^0.344.0",
