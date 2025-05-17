@@ -9,6 +9,8 @@ import {
   showBrowserNotification,
   requestNotificationPermission,
   registerServiceWorker,
+  isMobileDevice,
+  isNotificationSupported,
 } from "../lib/browserNotifications";
 
 interface NotificationContextType {
@@ -33,21 +35,48 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notificationPermissionRequested, setNotificationPermissionRequested] =
     useState(false);
+  const [isDeviceMobile, setIsDeviceMobile] = useState(false);
+  const [areNotificationsSupported, setAreNotificationsSupported] =
+    useState(true);
   const { user } = useAuth();
   const { subscribeToEvent } = useAbly();
+
+  // Check device and notification support
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const mobile = isMobileDevice();
+      const supported = isNotificationSupported();
+
+      setIsDeviceMobile(mobile);
+      setAreNotificationsSupported(supported);
+
+      console.log(
+        `Device is${mobile ? "" : " not"} mobile, notifications ${
+          supported ? "are" : "are not"
+        } supported`
+      );
+    }
+  }, []);
 
   // Initialize service worker and request notification permission
   useEffect(() => {
     const initializeNotifications = async () => {
-      if (!notificationPermissionRequested && "Notification" in window) {
+      if (!notificationPermissionRequested && areNotificationsSupported) {
         await requestNotificationPermission();
-        await registerServiceWorker();
+        if (!isDeviceMobile) {
+          // Service workers can be problematic on some mobile browsers
+          await registerServiceWorker();
+        }
         setNotificationPermissionRequested(true);
       }
     };
 
     initializeNotifications();
-  }, [notificationPermissionRequested]);
+  }, [
+    notificationPermissionRequested,
+    areNotificationsSupported,
+    isDeviceMobile,
+  ]);
 
   // Load notifications from Supabase
   useEffect(() => {
@@ -229,7 +258,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
       // Update local state
       setNotifications((prev) => [newNotification, ...prev]);
 
-      // Show toast notification
+      // Show toast notification (works on all devices)
       toast(message, {
         icon:
           type === "match"
@@ -242,41 +271,36 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         duration: 4000,
       });
 
-      // Show browser notification
-      if ("Notification" in window) {
-        const notificationIcon =
-          type === "match"
-            ? "🔍"
-            : type === "join"
-            ? "👤"
-            : type === "leave"
-            ? "�"
-            : "🔔";
-
+      // Show browser notification if supported
+      if (areNotificationsSupported) {
         const icon = "/banner_image.png";
         let redirectPath = "/notifications";
 
         // Add ride-specific redirect if available
         if (rideId) {
-          redirectPath = `/ride/${rideId}`;
+          redirectPath = `/rides/${rideId}`; // Updated to match route pattern
         }
 
         showBrowserNotification("Sohojatra Notification", {
           body: message,
           icon,
-          requireInteraction: true,
-          actions: [
-            {
-              action: "redirect",
-              title: "View Details",
-              deepLink: redirectPath,
-            },
-          ],
+          requireInteraction: !isDeviceMobile, // Don't require interaction on mobile
+          actions: isDeviceMobile
+            ? []
+            : [
+                {
+                  action: "redirect",
+                  title: "View Details",
+                  deepLink: redirectPath,
+                },
+              ],
           data: {
             redirectPath,
             notificationId: data.id,
             type,
           },
+        }).catch((err) => {
+          console.error("Failed to show browser notification:", err);
         });
       }
     } catch (error) {

@@ -1,6 +1,10 @@
 import { supabase } from "./supabase";
 import { Location, RideStatus } from "../types";
-import { showBrowserNotification } from "./browserNotifications";
+import {
+  showBrowserNotification,
+  isMobileDevice,
+  isNotificationSupported,
+} from "./browserNotifications";
 
 // Rides related functions
 export const fetchAllRides = async () => {
@@ -213,34 +217,44 @@ export const createNotification = async (
   }
 
   // Try to send browser notification if in browser environment
-  if (typeof window !== "undefined" && "Notification" in window) {
-    const icon = "/banner_image.png";
-    let redirectPath = "/notifications";
+  if (typeof window !== "undefined") {
+    const isMobile = isMobileDevice();
+    const notificationsSupported = isNotificationSupported();
 
-    // Add ride-specific redirect if available
-    if (rideId) {
-      redirectPath = `/ride/${rideId}`;
-    }
+    // Only attempt to show browser notifications if supported
+    if (notificationsSupported) {
+      const icon = "/banner_image.png";
+      let redirectPath = "/notifications";
 
-    showBrowserNotification("Sohojatra Notification", {
-      body: message,
-      icon,
-      requireInteraction: true,
-      actions: [
-        {
-          action: "redirect",
-          title: "View Details",
-          deepLink: redirectPath,
+      // Add ride-specific redirect if available
+      if (rideId) {
+        redirectPath = `/rides/${rideId}`; // Updated to match the actual ride URL format
+      }
+
+      showBrowserNotification("Sohojatra Notification", {
+        body: message,
+        icon,
+        requireInteraction: !isMobile, // Don't require interaction on mobile
+        actions: isMobile
+          ? []
+          : [
+              {
+                action: "redirect",
+                title: "View Details",
+                deepLink: redirectPath,
+              },
+            ],
+        data: {
+          redirectPath,
+          notificationId: data.id,
+          type,
         },
-      ],
-      data: {
-        redirectPath,
-        notificationId: data.id,
-        type,
-      },
-    }).catch((err) =>
-      console.error("Error showing browser notification:", err)
-    );
+      }).catch((err) =>
+        console.error("Error showing browser notification:", err)
+      );
+    } else {
+      console.log("Browser notifications not supported on this device");
+    }
   }
 
   return data;
