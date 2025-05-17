@@ -1,5 +1,6 @@
 import { supabase } from "./supabase";
 import { Location, RideStatus } from "../types";
+import { showBrowserNotification } from "./browserNotifications";
 
 // Rides related functions
 export const fetchAllRides = async () => {
@@ -209,6 +210,37 @@ export const createNotification = async (
   if (error) {
     console.error("Error creating notification:", error);
     throw error;
+  }
+
+  // Try to send browser notification if in browser environment
+  if (typeof window !== "undefined" && "Notification" in window) {
+    const icon = "/banner_image.png";
+    let redirectPath = "/notifications";
+
+    // Add ride-specific redirect if available
+    if (rideId) {
+      redirectPath = `/ride/${rideId}`;
+    }
+
+    showBrowserNotification("Sohojatra Notification", {
+      body: message,
+      icon,
+      requireInteraction: true,
+      actions: [
+        {
+          action: "redirect",
+          title: "View Details",
+          deepLink: redirectPath,
+        },
+      ],
+      data: {
+        redirectPath,
+        notificationId: data.id,
+        type,
+      },
+    }).catch((err) =>
+      console.error("Error showing browser notification:", err)
+    );
   }
 
   return data;

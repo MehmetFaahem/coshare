@@ -5,6 +5,11 @@ import { useAbly } from "./AblyContext";
 import { toast } from "react-hot-toast";
 import { supabase } from "../lib/supabase";
 import * as Ably from "ably";
+import {
+  showBrowserNotification,
+  requestNotificationPermission,
+  registerServiceWorker,
+} from "../lib/browserNotifications";
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -26,8 +31,23 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notificationPermissionRequested, setNotificationPermissionRequested] =
+    useState(false);
   const { user } = useAuth();
   const { subscribeToEvent } = useAbly();
+
+  // Initialize service worker and request notification permission
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      if (!notificationPermissionRequested && "Notification" in window) {
+        await requestNotificationPermission();
+        await registerServiceWorker();
+        setNotificationPermissionRequested(true);
+      }
+    };
+
+    initializeNotifications();
+  }, [notificationPermissionRequested]);
 
   // Load notifications from Supabase
   useEffect(() => {
@@ -221,6 +241,44 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
             : "🔔",
         duration: 4000,
       });
+
+      // Show browser notification
+      if ("Notification" in window) {
+        const notificationIcon =
+          type === "match"
+            ? "🔍"
+            : type === "join"
+            ? "👤"
+            : type === "leave"
+            ? "�"
+            : "🔔";
+
+        const icon = "/banner_image.png";
+        let redirectPath = "/notifications";
+
+        // Add ride-specific redirect if available
+        if (rideId) {
+          redirectPath = `/ride/${rideId}`;
+        }
+
+        showBrowserNotification("Sohojatra Notification", {
+          body: message,
+          icon,
+          requireInteraction: true,
+          actions: [
+            {
+              action: "redirect",
+              title: "View Details",
+              deepLink: redirectPath,
+            },
+          ],
+          data: {
+            redirectPath,
+            notificationId: data.id,
+            type,
+          },
+        });
+      }
     } catch (error) {
       console.error("Error adding notification:", error);
     }

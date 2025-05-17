@@ -11,7 +11,7 @@ import { toast } from "react-hot-toast";
 
 // Using a placeholder API key - in production, you would use environment variables
 // This should be replaced with your actual Ably API key
-const ABLY_API_KEY = process.env.VITE_ABLY_API_KEY;
+const ABLY_API_KEY = import.meta.env.VITE_ABLY_API_KEY;
 
 // Define proper types for Ably messages
 interface AblyMessage {

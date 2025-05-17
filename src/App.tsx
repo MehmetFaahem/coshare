@@ -13,6 +13,7 @@ import { RideProvider } from "./contexts/RideContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { AblyProvider } from "./contexts/AblyContext";
 import { toast } from "react-hot-toast";
+import NotificationInitializer from "./components/NotificationInitializer";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -66,6 +67,7 @@ function App() {
         <AblyProvider>
           <RideProvider>
             <NotificationProvider>
+              <NotificationInitializer />
               <Toaster
                 position="top-right"
                 toastOptions={{
