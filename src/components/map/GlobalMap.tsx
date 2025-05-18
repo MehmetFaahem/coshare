@@ -554,7 +554,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
         <div className="flex space-x-2">
           <button
             type="button"
-            className={`flex-1 px-3 py-2 border rounded-md ${
+            className={`flex-1 text-[12px] px-3 py-2 border rounded-md ${
               selectingLocation === "start"
                 ? "bg-emerald-600 text-white"
                 : "bg-emerald-900 text-white"
@@ -570,7 +570,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
 
           <button
             type="button"
-            className={`flex-1 px-3 py-2 border rounded-md ${
+            className={`flex-1 text-[12px] px-3 py-2 border rounded-md ${
               selectingLocation === "destination"
                 ? "bg-emerald-600 text-white"
                 : "bg-black text-white"
