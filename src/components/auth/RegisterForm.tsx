@@ -26,10 +26,12 @@ const RegisterForm: React.FC = () => {
 
     try {
       await register(name, email, password);
-      toast.success(
-        "Account created successfully! Please check your email to confirm your account."
-      );
-      navigate("/email-confirmation", { state: { email } });
+      // toast.success(
+      //   "Account created successfully! Please check your email to confirm your account."
+      // );
+      // navigate("/email-confirmation", { state: { email } });
+      toast.success("Account created successfully!");
+      navigate("/dashboard");
     } catch (error: any) {
       // Check for specific error types
       if (
