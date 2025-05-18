@@ -4,7 +4,6 @@ import { MapPin, Navigation, Users, Calendar, User, Phone } from "lucide-react";
 import RideMap from "../map/RideMap";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRide } from "../../contexts/RideContext";
-import { useAbly } from "../../contexts/AblyContext";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useNotification } from "../../contexts/NotificationContext";
@@ -31,7 +30,6 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
     syncRideStatus,
   } = useRide();
   const { addNotification } = useNotification();
-  const { subscribeToEvent } = useAbly();
   const navigate = useNavigate();
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [passengers, setPassengers] = useState<PassengerInfo[]>([]);

@@ -154,7 +154,7 @@ const RideMap: React.FC<RideMapProps> = ({
   }, []);
 
   return (
-    <div style={{ height, width: "100%" }} className="relative z-[10]">
+    <div className="relative z-[10] h-[200px] md:h-[400px]">
       {selectingLocation && (
         <div className="absolute top-2 left-0 right-0 z-10 mx-auto text-center bg-white bg-opacity-90 py-2 px-4 rounded-md shadow-md text-sm max-w-xs">
           <p className="font-medium">

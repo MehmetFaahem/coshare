@@ -588,7 +588,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
         </div>
       </div>
 
-      <div style={{ height, width: "100%" }} className="relative z-[10]">
+      <div className="relative z-[10] h-[200px]">
         {loading && (
           <div className="absolute inset-0 bg-white bg-opacity-70 z-10 flex items-center justify-center">
             <div className="text-emerald-600 font-medium">Loading...</div>

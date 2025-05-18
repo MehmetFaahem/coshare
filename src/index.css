@@ -13,7 +13,8 @@
 
 /* Animations */
 @keyframes pulse {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
   }
   50% {
@@ -35,10 +36,14 @@
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #10B981;
+  background: #10b981;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0E9F6E;
+  background: #0e9f6e;
+}
+
+.leaflet-bottom.leaflet-right {
+  display: none;
 }

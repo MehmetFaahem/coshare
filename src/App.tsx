@@ -7,13 +7,13 @@ import {
   useNavigate,
   useSearchParams,
 } from "react-router-dom";
-import { Toaster } from "react-hot-toast";
+import { Toaster, ToastBar, toast } from "react-hot-toast";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import { RideProvider } from "./contexts/RideContext";
 import { NotificationProvider } from "./contexts/NotificationContext";
 import { AblyProvider } from "./contexts/AblyContext";
-import { toast } from "react-hot-toast";
 import NotificationInitializer from "./components/NotificationInitializer";
+import FloatingCallButton from "./components/layout/FloatingCallButton";
 
 // Pages
 import HomePage from "./pages/HomePage";
@@ -91,7 +91,51 @@ function App() {
                     },
                   },
                 }}
-              />
+              >
+                {(t) => (
+                  <div
+                    onTouchStart={(e) => {
+                      const touch = e.touches[0];
+                      const startX = touch.clientX;
+
+                      const handleTouchMove = (e: TouchEvent) => {
+                        const touch = e.touches[0];
+                        const deltaX = touch.clientX - startX;
+
+                        if (deltaX > 80) {
+                          document.removeEventListener(
+                            "touchmove",
+                            handleTouchMove
+                          );
+                          document.removeEventListener(
+                            "touchend",
+                            handleTouchEnd
+                          );
+                          toast.dismiss(t.id);
+                        }
+                      };
+
+                      const handleTouchEnd = () => {
+                        document.removeEventListener(
+                          "touchmove",
+                          handleTouchMove
+                        );
+                        document.removeEventListener(
+                          "touchend",
+                          handleTouchEnd
+                        );
+                      };
+
+                      document.addEventListener("touchmove", handleTouchMove);
+                      document.addEventListener("touchend", handleTouchEnd);
+                    }}
+                    onClick={() => toast.dismiss(t.id)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <ToastBar toast={t} />
+                  </div>
+                )}
+              </Toaster>
 
               <Routes>
                 <Route path="/" element={<HomePage />} />
@@ -140,6 +184,9 @@ function App() {
                 {/* Redirect any unmatched routes to home */}
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
+
+              {/* Global floating call button */}
+              <FloatingCallButton />
             </NotificationProvider>
           </RideProvider>
         </AblyProvider>
