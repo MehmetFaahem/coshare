@@ -15,7 +15,7 @@ const FindRideForm: React.FC = () => {
   const { findMatchingRides, refreshAllRides } = useRide();
   const { subscribeToEvent } = useAbly();
 
-  // Function to refresh matching rides
+  // Function to refresh matching rides - memoized to avoid recreating on every render
   const refreshMatchingRides = useCallback(async () => {
     if (searched && startingPoint && destination) {
       console.log("Refreshing ride matches...");
@@ -38,41 +38,30 @@ const FindRideForm: React.FC = () => {
     refreshAllRides,
   ]);
 
+  // Event handlers - moved outside useEffect and memoized
+  const handleNewRide = useCallback(() => {
+    console.log("New ride created event received");
+    refreshMatchingRides();
+  }, [refreshMatchingRides]);
+
+  const handleUpdateRide = useCallback(() => {
+    console.log("Ride update event received");
+    refreshMatchingRides();
+  }, [refreshMatchingRides]);
+
+  const handleSyncEvent = useCallback(() => {
+    console.log("Sync event received");
+    // Wait a moment to allow the database to update before refreshing
+    setTimeout(() => refreshMatchingRides(), 300);
+  }, [refreshMatchingRides]);
+
+  const handleGenericEvent = useCallback(() => {
+    refreshMatchingRides();
+  }, [refreshMatchingRides]);
+
   // Always subscribe to ride updates regardless of search state
   useEffect(() => {
     console.log("Setting up real-time ride update subscriptions");
-
-    // Handle specific event types
-    const handleNewRide = (message: any) => {
-      console.log("New ride created event received");
-
-      if (
-        message.data &&
-        typeof message.data === "object" &&
-        "id" in message.data
-      ) {
-        console.log("New ride ID:", message.data.id);
-      }
-
-      // Force immediate refresh - very important when a new ride is created
-      refreshMatchingRides();
-    };
-
-    const handleUpdateRide = (message: any) => {
-      console.log("Ride update event received");
-      refreshMatchingRides();
-    };
-
-    const handleSyncEvent = (message: any) => {
-      console.log("Sync event received");
-
-      // Wait a moment to allow the database to update before refreshing
-      setTimeout(() => refreshMatchingRides(), 300);
-    };
-
-    const handleGenericEvent = () => {
-      refreshMatchingRides();
-    };
 
     // Subscribe to all ride events that might affect our results
     const unsubscribeNew = subscribeToEvent("rides", "new", handleNewRide);
@@ -112,17 +101,18 @@ const FindRideForm: React.FC = () => {
     searched,
     startingPoint,
     destination,
+    handleNewRide,
+    handleUpdateRide,
+    handleGenericEvent,
+    handleSyncEvent,
   ]);
 
-  // Refresh the ride list periodically to ensure we have the latest data
+  // Refresh the ride list periodically - modified to use ref to avoid resubscription
   useEffect(() => {
     if (!searched || !startingPoint || !destination) return;
 
     console.log("Setting up periodic ride refresh interval");
-    const refreshInterval = setInterval(() => {
-      console.log("Periodic refresh triggered");
-      refreshMatchingRides();
-    }, 10000); // Refresh every 10 seconds
+    const refreshInterval = setInterval(refreshMatchingRides, 10000); // Refresh every 10 seconds
 
     return () => {
       console.log("Cleaning up periodic refresh interval");

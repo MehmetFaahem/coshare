@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { RideRequest } from "../../types";
 import { MapPin, Navigation, Users, Calendar, User, Phone } from "lucide-react";
 import RideMap from "../map/RideMap";
@@ -45,49 +45,25 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
   const canComplete =
     isCreator && ride.status !== "completed" && ride.status !== "cancelled";
 
-  // Sync ride status when component mounts
+  // Sync ride status when component mounts or ride id changes
   useEffect(() => {
     if (ride.id) {
       syncRideStatus(ride.id);
     }
   }, [ride.id, syncRideStatus]);
 
-  // Fetch passengers with phone numbers
-  useEffect(() => {
-    const fetchPassengersInfo = async () => {
-      try {
-        // Get passenger info including phone numbers
-        const { data, error } = await supabase
-          .from("ride_passengers")
-          .select("user_id, contact_phone")
-          .eq("ride_id", ride.id);
+  // Fetch passengers info - memoized to avoid unnecessary rerenders
+  const fetchPassengersInfo = useCallback(async () => {
+    try {
+      // Get passenger info including phone numbers
+      const { data, error } = await supabase
+        .from("ride_passengers")
+        .select("user_id, contact_phone")
+        .eq("ride_id", ride.id);
 
-        if (error) {
-          console.error("Error fetching passengers:", error);
-          // Create fallback passenger data using the ride's passengers array
-          const fallbackPassengers: PassengerInfo[] = ride.passengers.map(
-            (passengerId) => ({
-              id: passengerId,
-              isCreator: passengerId === ride.creator,
-              contactPhone:
-                passengerId === ride.creator ? ride.contactPhone : undefined,
-            })
-          );
-          setPassengers(fallbackPassengers);
-          return;
-        }
-
-        // Map passengers data with creator flag
-        const passengersInfo: PassengerInfo[] = data.map((passenger) => ({
-          id: passenger.user_id,
-          isCreator: passenger.user_id === ride.creator,
-          contactPhone: passenger.contact_phone,
-        }));
-
-        setPassengers(passengersInfo);
-      } catch (err) {
-        console.error("Error fetching passenger details:", err);
-        // Create fallback passenger data
+      if (error) {
+        console.error("Error fetching passengers:", error);
+        // Create fallback passenger data using the ride's passengers array
         const fallbackPassengers: PassengerInfo[] = ride.passengers.map(
           (passengerId) => ({
             id: passengerId,
@@ -97,13 +73,38 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
           })
         );
         setPassengers(fallbackPassengers);
+        return;
       }
-    };
 
+      // Map passengers data with creator flag
+      const passengersInfo: PassengerInfo[] = data.map((passenger) => ({
+        id: passenger.user_id,
+        isCreator: passenger.user_id === ride.creator,
+        contactPhone: passenger.contact_phone,
+      }));
+
+      setPassengers(passengersInfo);
+    } catch (err) {
+      console.error("Error fetching passenger details:", err);
+      // Create fallback passenger data
+      const fallbackPassengers: PassengerInfo[] = ride.passengers.map(
+        (passengerId) => ({
+          id: passengerId,
+          isCreator: passengerId === ride.creator,
+          contactPhone:
+            passengerId === ride.creator ? ride.contactPhone : undefined,
+        })
+      );
+      setPassengers(fallbackPassengers);
+    }
+  }, [ride.id, ride.passengers, ride.creator, ride.contactPhone]);
+
+  // Fetch passengers when ride info changes
+  useEffect(() => {
     if (ride.id) {
       fetchPassengersInfo();
     }
-  }, [ride]);
+  }, [ride.id, fetchPassengersInfo]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -174,7 +175,9 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
         ride.id
       );
       toast.success("Successfully joined the ride");
-      navigate("/dashboard");
+
+      // Refresh the page to update ride data instead of redirecting to dashboard
+      window.location.reload();
     } catch (error) {
       toast.error("Failed to join ride");
       console.error(error);
