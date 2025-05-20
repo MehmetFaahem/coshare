@@ -342,6 +342,9 @@ const DashboardPage: React.FC = () => {
             <div className="flex flex-wrap gap-4">
               <Link
                 to="/create-ride"
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-md flex items-center transition-colors"
               >
                 <Plus className="h-5 w-5 mr-2" />
@@ -349,6 +352,9 @@ const DashboardPage: React.FC = () => {
               </Link>
               <Link
                 to="/rides"
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
                 className="bg-white hover:bg-gray-50 text-gray-800 px-6 py-3 rounded-md border border-gray-300 flex items-center transition-colors"
               >
                 <MapPin className="h-5 w-5 mr-2 text-gray-600" />
@@ -365,6 +371,9 @@ const DashboardPage: React.FC = () => {
               </h2>
               <Link
                 to="/rides"
+                onClick={() => {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
                 className="text-emerald-600 hover:text-emerald-700 flex items-center text-sm font-medium"
               >
                 View All

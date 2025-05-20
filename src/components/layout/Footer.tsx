@@ -32,6 +32,9 @@ const Footer: React.FC = () => {
               <li>
                 <Link
                   to="/"
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                   className="text-gray-300 hover:text-emerald-400 transition-colors text-sm"
                 >
                   Home
@@ -40,6 +43,9 @@ const Footer: React.FC = () => {
               <li>
                 <Link
                   to="/rides"
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                   className="text-gray-300 hover:text-emerald-400 transition-colors text-sm"
                 >
                   Find Rides
@@ -48,6 +54,9 @@ const Footer: React.FC = () => {
               <li>
                 <Link
                   to="/create-ride"
+                  onClick={() => {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
                   className="text-gray-300 hover:text-emerald-400 transition-colors text-sm"
                 >
                   Create Ride
@@ -55,7 +64,10 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  to="/how-it-works"
+                  to="/"
+                  onClick={() => {
+                    window.scrollTo({ top: 300, behavior: "smooth" });
+                  }}
                   className="text-gray-300 hover:text-emerald-400 transition-colors text-sm"
                 >
                   How It Works
