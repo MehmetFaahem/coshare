@@ -1,8 +1,14 @@
-import React from "react";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Github, Twitter, Facebook, Instagram } from "lucide-react";
+import { Github, Twitter, Facebook, Instagram, Linkedin } from "lucide-react";
 import Logo from "/sohojatra.png";
+import TermsModal from "../modals/TermsModal";
+import PrivacyModal from "../modals/PrivacyModal";
+
 const Footer: React.FC = () => {
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
+
   return (
     <footer className="bg-emerald-700 text-white">
       <div className="container mx-auto px-4 py-8">
@@ -63,35 +69,28 @@ const Footer: React.FC = () => {
             <ul className="space-y-2">
               <li>
                 <Link
-                  to="/faq"
-                  className="text-gray-300 hover:text-emerald-400 transition-colors text-sm"
-                >
-                  FAQ
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/contact"
+                  to="https://www.linkedin.com/in/muhammad-faahem/"
+                  target="_blank"
                   className="text-gray-300 hover:text-emerald-400 transition-colors text-sm"
                 >
                   Contact Us
                 </Link>
               </li>
               <li>
-                <Link
-                  to="/terms"
-                  className="text-gray-300 hover:text-emerald-400 transition-colors text-sm"
+                <button
+                  onClick={() => setIsTermsModalOpen(true)}
+                  className="text-gray-300 hover:text-emerald-400 transition-colors text-sm cursor-pointer"
                 >
                   Terms of Service
-                </Link>
+                </button>
               </li>
               <li>
-                <Link
-                  to="/privacy"
-                  className="text-gray-300 hover:text-emerald-400 transition-colors text-sm"
+                <button
+                  onClick={() => setIsPrivacyModalOpen(true)}
+                  className="text-gray-300 hover:text-emerald-400 transition-colors text-sm cursor-pointer"
                 >
                   Privacy Policy
-                </Link>
+                </button>
               </li>
             </ul>
           </div>
@@ -100,7 +99,7 @@ const Footer: React.FC = () => {
             <h3 className="text-lg font-semibold mb-4">Connect With Us</h3>
             <div className="flex space-x-4">
               <a
-                href="https://github.com"
+                href="https://github.com/MehmetFaahem"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-300 hover:text-emerald-400 transition-colors"
@@ -108,31 +107,15 @@ const Footer: React.FC = () => {
                 <Github size={20} />
               </a>
               <a
-                href="https://twitter.com"
+                href="https://www.linkedin.com/in/muhammad-faahem/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-300 hover:text-emerald-400 transition-colors"
               >
-                <Twitter size={20} />
-              </a>
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-300 hover:text-emerald-400 transition-colors"
-              >
-                <Facebook size={20} />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-gray-300 hover:text-emerald-400 transition-colors"
-              >
-                <Instagram size={20} />
+                <Linkedin size={20} />
               </a>
             </div>
-            <div className="mt-4">
+            {/* <div className="mt-4">
               <p className="text-gray-300 text-sm">
                 Subscribe to our newsletter
               </p>
@@ -146,7 +129,7 @@ const Footer: React.FC = () => {
                   Subscribe
                 </button>
               </div>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -156,6 +139,16 @@ const Footer: React.FC = () => {
           </p>
         </div>
       </div>
+
+      {/* Modals */}
+      <TermsModal
+        isOpen={isTermsModalOpen}
+        onClose={() => setIsTermsModalOpen(false)}
+      />
+      <PrivacyModal
+        isOpen={isPrivacyModalOpen}
+        onClose={() => setIsPrivacyModalOpen(false)}
+      />
     </footer>
   );
 };
