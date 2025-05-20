@@ -66,7 +66,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
           <button
             onClick={markAllAsRead}
-            className="text-sm text-emerald-600 hover:text-emerald-800"
+            disabled={!notifications.some((n) => !n.read)}
+            className={`text-sm ${
+              notifications.some((n) => !n.read)
+                ? "text-emerald-600 hover:text-emerald-800"
+                : "text-gray-400 cursor-not-allowed"
+            }`}
           >
             Mark all as read
           </button>

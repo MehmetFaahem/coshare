@@ -319,12 +319,23 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
         return;
       }
 
-      // Update notification in Supabase
-      const { error } = await supabase
+      // Get the full notification data to preserve all fields
+      const { data: notificationData, error: fetchError } = await supabase
         .from("notifications")
-        .update({ read: true })
+        .select("*")
         .eq("id", id)
-        .eq("user_id", user.id); // Extra safety with RLS
+        .single();
+
+      if (fetchError) {
+        console.error("Error fetching notification:", fetchError);
+        return;
+      }
+
+      // Update the notification preserving all fields
+      const { error } = await supabase.from("notifications").upsert({
+        ...notificationData,
+        read: true,
+      });
 
       if (error) {
         console.error("Error marking notification as read:", error);
@@ -345,15 +356,38 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const markAllAsRead = async () => {
-    if (!user || notifications.length === 0) return;
+    if (!user) return;
+
+    // Check if there are any unread notifications
+    const unreadNotificationsExist = notifications.some(
+      (notification) => !notification.read
+    );
+    if (!unreadNotificationsExist) return;
 
     try {
-      // Update all notifications for this user in Supabase
-      const { error } = await supabase
+      // Get all unread notifications with all fields
+      const { data: unreadNotifications, error: fetchError } = await supabase
         .from("notifications")
-        .update({ read: true })
+        .select("*") // Get all fields
         .eq("user_id", user.id)
         .eq("read", false);
+
+      if (fetchError) {
+        console.error("Error fetching unread notifications:", fetchError);
+        return;
+      }
+
+      if (!unreadNotifications || unreadNotifications.length === 0) {
+        return; // No unread notifications to update
+      }
+
+      // Keep all fields but update the read status
+      const updates = unreadNotifications.map((notification) => ({
+        ...notification, // Preserve all existing fields
+        read: true, // Update read status
+      }));
+
+      const { error } = await supabase.from("notifications").upsert(updates);
 
       if (error) {
         console.error("Error marking all notifications as read:", error);

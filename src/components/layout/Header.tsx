@@ -1,9 +1,19 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
-import { Bell, Menu, X, User, LogOut } from "lucide-react";
+import {
+  Bell,
+  Menu,
+  X,
+  User,
+  LogOut,
+  CheckCircle,
+  Info,
+  Users,
+} from "lucide-react";
 import { useNotification } from "../../contexts/NotificationContext";
 import NotificationDropdown from "../shared/NotificationDropdown";
+import Logo from "/sohojatra.png";
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -11,6 +21,8 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isNotificationDrawerOpen, setIsNotificationDrawerOpen] =
+    useState(false);
 
   const handleLogout = () => {
     logout();
@@ -23,15 +35,11 @@ const Header: React.FC = () => {
         <div className="flex justify-between h-16">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <svg
-                viewBox="0 0 24 24"
-                width="32"
-                height="32"
-                className="text-emerald-600 fill-current mr-2"
-              >
-                <path d="M5.5 21C4.72 21 4.04 20.58 3.71 19.9L2.1 16.44C1.61 15.38 1.95 14.14 2.9 13.5L4.33 12.58C4.09 11.76 3.97 10.9 3.97 10.01C3.97 9.12 4.09 8.26 4.33 7.44L2.9 6.52C1.95 5.88 1.61 4.64 2.1 3.58L3.71 0.11C4.04 -0.57 4.72 -0.99 5.5 -0.99C6.56 -0.99 8.22 -0.99 9.17 -0.99C9.44 -0.99 9.71 -0.89 9.93 -0.7C12.4 1.48 13.97 5.55 13.97 10.01C13.97 14.47 12.4 18.54 9.93 20.72C9.71 20.91 9.44 21.01 9.17 21.01C8.22 21.01 6.56 21.01 5.5 21.01V21ZM19.83 17.01H15.83V15.01H19.83C20.93 15.01 21.83 14.11 21.83 13.01C21.83 11.91 20.93 11.01 19.83 11.01H18.33V20.96C18.33 21.54 17.87 22.01 17.29 22C16.71 21.99 16.26 21.52 16.27 20.94L16.33 7.01H19.83C22.14 7.01 24 8.87 24 11.18V11.18C24 13.83 22.28 16.06 19.83 17.01Z" />
-              </svg>
-              <span className="font-bold text-lg text-gray-800">Sohojatra</span>
+              <img
+                src={Logo}
+                alt="Sohojatra"
+                className="w-[120px] md:w-[150px]"
+              />
             </Link>
           </div>
 
@@ -115,8 +123,22 @@ const Header: React.FC = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
+          {/* Mobile menu and notification buttons */}
           <div className="flex items-center sm:hidden">
+            {user && (
+              <button
+                type="button"
+                className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-emerald-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-500 relative mr-2"
+                onClick={() => setIsNotificationDrawerOpen(true)}
+              >
+                <Bell className="h-6 w-6" />
+                {unreadCount > 0 && (
+                  <span className="absolute top-0 right-0 block h-5 w-5 rounded-full bg-red-500 text-white text-xs font-bold flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+            )}
             <button
               type="button"
               className="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-emerald-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-500"
@@ -164,7 +186,7 @@ const Header: React.FC = () => {
                   <button
                     onClick={() => {
                       setIsMenuOpen(false);
-                      setIsNotificationOpen(true);
+                      setIsNotificationDrawerOpen(true);
                     }}
                     className="flex items-center w-full text-left"
                   >
@@ -219,7 +241,146 @@ const Header: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Mobile notification drawer */}
+      {isNotificationDrawerOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 sm:hidden">
+          <div
+            className="absolute inset-0"
+            onClick={() => setIsNotificationDrawerOpen(false)}
+          />
+          <div className="fixed bottom-0 left-0 right-0 bg-white rounded-t-xl shadow-xl transform transition-transform duration-300 z-50 max-h-[80vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-800">
+                Notifications
+              </h3>
+              <button
+                onClick={() => setIsNotificationDrawerOpen(false)}
+                className="p-1 rounded-full text-gray-500 hover:text-emerald-600"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto">
+              <NotificationList />
+            </div>
+          </div>
+        </div>
+      )}
     </header>
+  );
+};
+
+// Notification list component to be reused
+const NotificationList = () => {
+  const { notifications, markAsRead, markAllAsRead } = useNotification();
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMs = now.getTime() - date.getTime();
+    const diffInMin = Math.floor(diffInMs / 60000);
+    const diffInHours = Math.floor(diffInMin / 60);
+    const diffInDays = Math.floor(diffInHours / 24);
+
+    if (diffInMin < 1) return "Just now";
+    if (diffInMin < 60) return `${diffInMin}m ago`;
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    return `${diffInDays}d ago`;
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "match":
+        return <CheckCircle className="h-5 w-5 text-emerald-500" />;
+      case "update":
+        return <Info className="h-5 w-5 text-blue-500" />;
+      case "join":
+        return <Users className="h-5 w-5 text-purple-500" />;
+      case "leave":
+        return (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-5 w-5 text-amber-500"
+          >
+            <path d="M14 8v-2a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2-2v-2" />
+            <path d="M9 12h12l-3-3" />
+            <path d="M18 15l3-3" />
+          </svg>
+        );
+      case "system":
+      default:
+        return <Bell className="h-5 w-5 text-gray-500" />;
+    }
+  };
+
+  return (
+    <div>
+      <div className="p-4 border-b border-gray-200">
+        <button
+          onClick={markAllAsRead}
+          className="text-sm text-emerald-600 hover:text-emerald-800"
+        >
+          Mark all as read
+        </button>
+      </div>
+
+      <div>
+        {notifications.length === 0 ? (
+          <div className="p-4 text-center text-gray-500">
+            No notifications yet
+          </div>
+        ) : (
+          <div>
+            {notifications.map((notification) => (
+              <div
+                key={notification.id}
+                className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                  !notification.read ? "bg-emerald-50" : ""
+                }`}
+                onClick={() => markAsRead(notification.id)}
+              >
+                <div className="flex">
+                  <div className="flex-shrink-0 mr-3">
+                    {getNotificationIcon(notification.type)}
+                  </div>
+                  <div className="w-full">
+                    <div className="flex justify-between">
+                      <p
+                        className={`text-sm ${
+                          !notification.read ? "font-medium" : "text-gray-700"
+                        }`}
+                      >
+                        {notification.message}
+                      </p>
+                      <span className="text-xs text-gray-500 ml-2 whitespace-nowrap">
+                        {formatTime(notification.createdAt)}
+                      </span>
+                    </div>
+                    {notification.rideId && (
+                      <Link
+                        to={`/rides/${notification.rideId}`}
+                        className="mt-1 text-xs text-emerald-600 hover:text-emerald-800"
+                      >
+                        View ride details
+                      </Link>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
   );
 };
 

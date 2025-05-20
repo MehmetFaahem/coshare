@@ -1,14 +1,18 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Github, Twitter, Facebook, Instagram } from "lucide-react";
-
+import Logo from "/sohojatra.png";
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-gray-800 text-white">
+    <footer className="bg-emerald-700 text-white">
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">Sohojatra</h3>
+            <img
+              src={Logo}
+              alt="Sohojatra"
+              className="hidden md:block md:w-[150px]"
+            />
             <p className="text-gray-300 text-sm">
               Connecting passengers to share rides and reduce transportation
               costs. Our platform makes sharing rickshaws easy, environmentally

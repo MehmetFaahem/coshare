@@ -4,7 +4,7 @@ import { Users, Clock, MapPin, DollarSign } from "lucide-react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import { useAuth } from "../contexts/AuthContext";
-import BannerImage from "../../public/banner_image.png";
+import BannerImage from "/banner_image.png";
 
 const HomePage: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -15,60 +15,58 @@ const HomePage: React.FC = () => {
 
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-emerald-700 to-emerald-900 text-white py-20">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row items-center justify-between">
-              <div className="md:w-1/2 mb-10 md:mb-0">
-                <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
-                  Share Your Rickshaw, <br />
-                  <span className="text-emerald-300">Save Your Money</span>
-                </h1>
-                <p className="text-xl mb-8 text-emerald-100">
-                  Connect with other passengers going the same way. Split fares,
-                  reduce traffic, and make new friends.
-                </p>
-                <div className="flex flex-wrap gap-4">
-                  {!isAuthenticated ? (
-                    <>
-                      <Link
-                        to="/register"
-                        className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 rounded-md font-medium transition-colors text-center"
-                      >
-                        Sign up for free
-                      </Link>
-                      <Link
-                        to="/login"
-                        className="px-6 py-3 bg-white text-emerald-700 hover:bg-emerald-50 rounded-md font-medium transition-colors text-center"
-                      >
-                        Login
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <Link
-                        to="/rides"
-                        className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 rounded-md font-medium transition-colors text-center"
-                      >
-                        Find a Ride
-                      </Link>
-                      <Link
-                        to="/create-ride"
-                        className="px-6 py-3 bg-white text-emerald-700 hover:bg-emerald-50 rounded-md font-medium transition-colors text-center"
-                      >
-                        Create a Ride
-                      </Link>
-                    </>
-                  )}
-                </div>
+        <section className="bg-gradient-to-br from-emerald-700 to-emerald-900 text-white py-20 h-[100vh]">
+          <div className="flex flex-col md:flex-row items-center justify-between h-full px-4 sm:px-6 lg:px-8 mx-auto container">
+            <div className="md:w-1/2 mb-10 md:mb-0">
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
+                Share Your Rickshaw, <br />
+                <span className="text-emerald-300">Save Your Money</span>
+              </h1>
+              <p className="text-xl mb-8 text-emerald-100">
+                Connect with other passengers going the same way. Split fares,
+                reduce traffic, and make new friends.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                {!isAuthenticated ? (
+                  <>
+                    <Link
+                      to="/register"
+                      className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 rounded-md font-medium transition-colors text-center"
+                    >
+                      Sign up for free
+                    </Link>
+                    <Link
+                      to="/login"
+                      className="px-6 py-3 bg-white text-emerald-700 hover:bg-emerald-50 rounded-md font-medium transition-colors text-center"
+                    >
+                      Login
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/rides"
+                      className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 rounded-md font-medium transition-colors text-center"
+                    >
+                      Find a Ride
+                    </Link>
+                    <Link
+                      to="/create-ride"
+                      className="px-6 py-3 bg-white text-emerald-700 hover:bg-emerald-50 rounded-md font-medium transition-colors text-center"
+                    >
+                      Create a Ride
+                    </Link>
+                  </>
+                )}
               </div>
-              <div className="md:w-1/2 flex justify-center">
-                <img
-                  src={BannerImage}
-                  alt="Rickshaw ride sharing"
-                  className="max-w-full h-auto"
-                  style={{ maxHeight: "450px" }}
-                />
-              </div>
+            </div>
+            <div className="md:w-1/2 flex justify-center">
+              <img
+                src={BannerImage}
+                alt="Rickshaw ride sharing"
+                className="max-w-full h-auto"
+                style={{ maxHeight: "700px" }}
+              />
             </div>
           </div>
         </section>
