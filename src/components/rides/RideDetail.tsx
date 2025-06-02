@@ -209,54 +209,62 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Header Card */}
-      <div className="bg-white rounded-3xl shadow-large border border-gray-100 overflow-hidden">
-        <div className="bg-gradient-to-r from-accent-500 to-accent-600 text-white p-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold mb-2">
-                {isCreator ? "Your Ride Request" : "Ride Details"}
-              </h1>
-              <div className="flex items-center text-accent-100">
-                <Calendar className="h-5 w-5 mr-2" />
-                <span className="text-lg">{formatDateTime(ride.createdAt)}</span>
+    <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
+      {/* Main Ride Details Card */}
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-large border border-gray-100 overflow-hidden">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-accent-50 to-accent-100 p-4 sm:p-6 lg:p-8 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-r from-accent-400 to-accent-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <Navigation className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+                  {isCreator ? "Your Ride Request" : "Ride Details"}
+                </h1>
+                <div className="flex items-center text-sm sm:text-base text-gray-600 mt-1">
+                  <Calendar className="h-4 w-4 sm:h-5 sm:w-5 mr-2 flex-shrink-0" />
+                  <span>{formatDateTime(ride.createdAt)}</span>
+                </div>
               </div>
             </div>
-            {getStatusBadge(ride.status)}
+            <div className="flex-shrink-0 self-start sm:self-center">
+              {getStatusBadge(ride.status)}
+            </div>
           </div>
         </div>
 
-        <div className="p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           {/* Route Information */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <div className="space-y-6">
-              <div className="bg-green-50 rounded-2xl p-6 border border-green-200">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <MapPin className="h-6 w-6 text-green-600" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 mb-6 sm:mb-8">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-green-200">
+                <div className="flex items-start space-x-3 sm:space-x-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-green-600 uppercase tracking-wide mb-1">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-green-700 uppercase tracking-wide mb-1">
                       Starting Point
                     </p>
-                    <p className="text-lg font-medium text-gray-900">
+                    <p className="text-sm sm:text-base lg:text-lg font-medium text-green-900 break-words">
                       {ride.startingPoint.address}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-red-50 rounded-2xl p-6 border border-red-200">
-                <div className="flex items-start space-x-4">
-                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
-                    <Navigation className="h-6 w-6 text-red-600" />
+              <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-red-200">
+                <div className="flex items-start space-x-3 sm:space-x-4">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <MapPin className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold text-red-600 uppercase tracking-wide mb-1">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm font-semibold text-red-700 uppercase tracking-wide mb-1">
                       Destination
                     </p>
-                    <p className="text-lg font-medium text-gray-900">
+                    <p className="text-sm sm:text-base lg:text-lg font-medium text-red-900 break-words">
                       {ride.destination.address}
                     </p>
                   </div>
@@ -264,66 +272,97 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
               </div>
             </div>
 
-            {/* Seats Information */}
-            <div className="bg-accent-50 rounded-2xl p-6 border border-accent-200">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Users className="h-8 w-8 text-accent-600" />
+            {/* Map */}
+            <div className="bg-gray-50 rounded-xl sm:rounded-2xl overflow-hidden border border-gray-200">
+              <RideMap
+                ride={ride}
+                height="250px sm:300px lg:350px"
+                showRoute={true}
+              />
+            </div>
+          </div>
+
+          {/* Ride Information Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="bg-accent-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-accent-200">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-accent-100 rounded-full flex items-center justify-center">
+                  <Users className="h-5 w-5 sm:h-6 sm:w-6 text-accent-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">Seat Availability</h3>
-                <div className="text-4xl font-bold text-accent-600 mb-2">
-                  {ride.seatsAvailable}/{ride.totalSeats}
+                <div>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+                    {ride.seatsAvailable}/{ride.totalSeats}
+                  </p>
+                  <p className="text-xs sm:text-sm text-accent-700 font-medium">
+                    Seats Available
+                  </p>
                 </div>
-                <p className="text-gray-600">seats available</p>
-                
-                {/* Progress Bar */}
-                <div className="mt-4">
-                  <div className="bg-gray-200 rounded-full h-3 overflow-hidden">
-                    <div
-                      className="bg-gradient-to-r from-accent-400 to-accent-500 h-full transition-all duration-300"
-                      style={{
-                        width: `${((ride.totalSeats - ride.seatsAvailable) / ride.totalSeats) * 100}%`,
-                      }}
-                    ></div>
-                  </div>
-                  <p className="text-sm text-gray-500 mt-2">
-                    {ride.passengers.length} passengers joined
+              </div>
+            </div>
+
+            <div className="bg-secondary-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-secondary-200">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-secondary-100 rounded-full flex items-center justify-center">
+                  <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-secondary-600" />
+                </div>
+                <div>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+                    {ride.status === "open" ? "Active" : ride.status}
+                  </p>
+                  <p className="text-xs sm:text-sm text-secondary-700 font-medium">
+                    Ride Status
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-blue-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-blue-200 sm:col-span-2 lg:col-span-1">
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <User className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">
+                    {ride.passengers.length}
+                  </p>
+                  <p className="text-xs sm:text-sm text-blue-700 font-medium">
+                    Current Passengers
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Map */}
-          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Route Map</h3>
-            <div className="h-96 rounded-xl overflow-hidden">
-              <RideMap ride={ride} />
-            </div>
-          </div>
-
-          {/* Passengers List */}
-          {ride.passengers.length > 0 && (
-            <div className="mt-8 bg-gray-50 rounded-2xl p-6 border border-gray-200">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
-                Passengers ({ride.passengers.length})
+          {/* Contact Information */}
+          {(isPassenger || isCreator) && passengers.length > 0 && (
+            <div className="mb-6 sm:mb-8 bg-green-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-green-200">
+              <h3 className="text-lg sm:text-xl font-bold text-green-800 mb-3 sm:mb-4 flex items-center">
+                <Phone className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3" />
+                Contact Information
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {ride.passengers.map((passengerId, index) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {passengers.map((passenger, index) => (
                   <div
-                    key={passengerId}
-                    className="bg-white rounded-xl p-4 border border-gray-200 flex items-center space-x-3"
+                    key={`${passenger.id}-${index}`}
+                    className="bg-white rounded-lg sm:rounded-xl p-3 sm:p-4 border border-green-200"
                   >
-                    <div className="w-10 h-10 bg-gradient-to-r from-accent-400 to-accent-500 rounded-full flex items-center justify-center">
-                      <User className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900">
-                        {passengerId === ride.creator ? "Creator" : `Passenger ${index + 1}`}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {passengerId === user?.id ? "You" : "Other user"}
-                      </p>
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-500 rounded-full flex items-center justify-center">
+                        <User className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm sm:text-base font-medium text-gray-900">
+                          {passenger.isCreator ? "Creator" : `Passenger ${index + 1}`}
+                        </p>
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          {passenger.id === user?.id ? "You" : "Other user"}
+                        </p>
+                        {passenger.contactPhone && (
+                          <p className="text-xs sm:text-sm font-medium text-green-700 break-all">
+                            📞 {passenger.contactPhone}
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -332,16 +371,16 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
           )}
 
           {/* Action Buttons */}
-          <div className="mt-8 flex flex-wrap gap-4 p-6 bg-gray-50 rounded-2xl border border-gray-200">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 p-4 sm:p-6 bg-gray-50 rounded-xl sm:rounded-2xl border border-gray-200">
             {canJoin && (
               <button
                 onClick={handleJoinRideClick}
                 disabled={isJoining}
-                className="flex-1 min-w-0 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-medium disabled:transform-none disabled:shadow-none"
+                className="w-full sm:flex-1 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 sm:px-6 py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-medium disabled:transform-none disabled:shadow-none text-sm sm:text-base"
               >
                 {isJoining ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-t-2 border-b-2 border-white mr-2"></div>
                     Joining...
                   </div>
                 ) : (
@@ -354,11 +393,11 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
               <button
                 onClick={handleCancelRide}
                 disabled={isLeaving}
-                className="flex-1 min-w-0 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 disabled:text-gray-400 px-6 py-3 rounded-xl font-semibold transition-colors"
+                className="w-full sm:flex-1 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 disabled:text-gray-400 px-4 sm:px-6 py-3 rounded-lg sm:rounded-xl font-semibold transition-colors text-sm sm:text-base"
               >
                 {isLeaving ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-600 mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-t-2 border-b-2 border-gray-600 mr-2"></div>
                     Processing...
                   </div>
                 ) : isCreator ? (
@@ -373,16 +412,16 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
               <button
                 onClick={handleCompleteRide}
                 disabled={isCompleting}
-                className="flex-1 min-w-0 bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-medium disabled:transform-none disabled:shadow-none"
+                className="w-full sm:flex-1 bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 sm:px-6 py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-medium disabled:transform-none disabled:shadow-none text-sm sm:text-base"
               >
                 {isCompleting ? (
                   <div className="flex items-center justify-center">
-                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-t-2 border-b-2 border-white mr-2"></div>
                     Completing...
                   </div>
                 ) : (
                   <div className="flex items-center justify-center">
-                    <CheckCircle className="h-5 w-5 mr-2" />
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                     Mark as Completed
                   </div>
                 )}
@@ -391,7 +430,7 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
 
             <button
               onClick={() => navigate(-1)}
-              className="flex-1 min-w-0 border-2 border-gray-200 hover:border-accent-300 hover:bg-accent-50 text-gray-700 hover:text-accent-700 px-6 py-3 rounded-xl font-semibold transition-all duration-200"
+              className="w-full sm:flex-1 border-2 border-gray-200 hover:border-accent-300 hover:bg-accent-50 text-gray-700 hover:text-accent-700 px-4 sm:px-6 py-3 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 text-sm sm:text-base"
             >
               Go Back
             </button>
@@ -400,18 +439,18 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
       </div>
 
       {/* Instructions Card */}
-      <div className="bg-blue-50 rounded-3xl border border-blue-200 p-8">
-        <div className="flex items-start space-x-4">
-          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-blue-50 rounded-2xl sm:rounded-3xl border border-blue-200 p-4 sm:p-6 lg:p-8">
+        <div className="flex flex-col sm:flex-row items-start space-y-4 sm:space-y-0 sm:space-x-4">
+          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div className="flex-1">
-            <h3 className="text-xl font-bold text-blue-800 mb-3">
+            <h3 className="text-lg sm:text-xl font-bold text-blue-800 mb-2 sm:mb-3">
               Important Instructions
             </h3>
-            <div className="text-blue-700 space-y-3">
+            <div className="text-blue-700 space-y-2 sm:space-y-3 text-sm sm:text-base">
               <p className="leading-relaxed">
                 <strong>Transportation Arrangement:</strong> This app helps you find co-passengers. Once your group is formed, you'll need to arrange for transportation offline.
               </p>

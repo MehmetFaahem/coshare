@@ -33,11 +33,11 @@ const CreateRidePage: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-grow py-12 bg-gradient-to-br from-accent-50 to-secondary-50">
+      <main className="flex-grow py-6 sm:py-8 lg:py-12 bg-gradient-to-br from-accent-50 to-secondary-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Create a New Ride</h1>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+          <div className="text-center mb-6 sm:mb-8">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">Create a New Ride</h1>
+            <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
               Find co-passengers for your journey and split the cost of transportation
             </p>
           </div>

@@ -11,12 +11,18 @@ interface RideListProps {
   rides: RideRequest[];
   showActions?: boolean;
   emptyMessage?: string;
+  onJoin?: (rideId: string) => void;
+  onCancel?: (rideId: string) => void;
+  onComplete?: (rideId: string) => void;
 }
 
 const RideList: React.FC<RideListProps> = ({
   rides,
-  showActions = true,
-  emptyMessage = "No rides found",
+  showActions = false,
+  emptyMessage = "No rides available",
+  onJoin,
+  onCancel,
+  onComplete,
 }) => {
   const {
     joinRideRequest,
@@ -166,32 +172,46 @@ const RideList: React.FC<RideListProps> = ({
 
   if (rides.length === 0) {
     return (
-      <div className="text-center py-12 bg-white rounded-lg shadow-sm">
-        <p className="text-gray-500">{emptyMessage}</p>
+      <div className="bg-white rounded-2xl p-8 sm:p-12 lg:p-16 text-center shadow-soft border border-gray-100">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 bg-gradient-to-br from-gray-200 to-gray-300 rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6 lg:mb-8">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 text-gray-500"
+          >
+            <path d="M3 6h18l-2 13H5L3 6Z"></path>
+            <path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </div>
+        <h3 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 sm:mb-4">
+          {emptyMessage}
+        </h3>
+        <p className="text-gray-600 text-base sm:text-lg max-w-md mx-auto">
+          Check back later or create a new ride to get started!
+        </p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {rides.map((ride) => (
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+      {rides.map((ride) => (
+        <div key={ride.id} className="w-full">
           <RideCard
-            key={`${ride.id}-${ride.status}-${ride.seatsAvailable}`}
             ride={ride}
-            onJoin={showActions ? handleJoinClick : undefined}
-            onCancel={showActions ? handleCancelRide : undefined}
-            onComplete={showActions ? handleCompleteRide : undefined}
+            onJoin={showActions ? onJoin : undefined}
+            onCancel={showActions ? onCancel : undefined}
+            onComplete={showActions ? onComplete : undefined}
           />
-        ))}
-      </div>
-
-      {/* Phone Number Modal */}
-      <PhoneNumberModal
-        isOpen={showPhoneModal}
-        onClose={() => setShowPhoneModal(false)}
-        onSubmit={handlePhoneSubmit}
-      />
+        </div>
+      ))}
     </div>
   );
 };

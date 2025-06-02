@@ -1,14 +1,16 @@
 import React from "react";
-import { useNotification } from "../../contexts/NotificationContext";
 import { Link } from "react-router-dom";
-import { Bell, CheckCircle, AlertCircle, Users, Info } from "lucide-react";
+import { useNotification } from "../../contexts/NotificationContext";
+import { Bell, CheckCircle, Info, Users } from "lucide-react";
 
 interface NotificationDropdownProps {
   onClose: () => void;
+  isMobileDrawer?: boolean;
 }
 
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   onClose,
+  isMobileDrawer = false,
 }) => {
   const { notifications, markAsRead, markAllAsRead } = useNotification();
 
@@ -29,9 +31,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "match":
-        return <CheckCircle className="h-5 w-5 text-accent-500" />;
+        return <CheckCircle className="h-5 w-5 text-green-500" />;
       case "update":
-        return <Info className="h-5 w-5 text-secondary-500" />;
+        return <Info className="h-5 w-5 text-blue-500" />;
       case "join":
         return <Users className="h-5 w-5 text-purple-500" />;
       case "leave":
@@ -59,31 +61,43 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     }
   };
 
+  // Different styling for mobile drawer vs desktop dropdown
+  const containerClass = isMobileDrawer 
+    ? "w-full bg-white" 
+    : "absolute right-0 mt-2 w-96 bg-white rounded-2xl shadow-large border border-gray-200 z-50";
+
   return (
-    <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-large overflow-hidden z-20 border border-gray-100">
-      <div className="p-6 bg-gradient-to-r from-accent-50 to-accent-100 border-b border-gray-200">
-        <div className="flex justify-between items-center">
-          <h3 className="text-xl font-bold text-gray-900">Notifications</h3>
+    <div className={containerClass}>
+      {!isMobileDrawer && (
+        <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-accent-50 to-accent-100 rounded-t-2xl">
+          <div className="flex justify-between items-center">
+            <h3 className="text-lg font-bold text-gray-900">Notifications</h3>
+            <button
+              onClick={markAllAsRead}
+              className="text-sm text-accent-600 hover:text-accent-700 font-medium"
+            >
+              Mark all as read
+            </button>
+          </div>
+        </div>
+      )}
+
+      {isMobileDrawer && (
+        <div className="p-4 border-b border-gray-200">
           <button
             onClick={markAllAsRead}
-            disabled={!notifications.some((n) => !n.read)}
-            className={`text-sm font-medium transition-colors ${
-              notifications.some((n) => !n.read)
-                ? "text-accent-600 hover:text-accent-700"
-                : "text-gray-400 cursor-not-allowed"
-            }`}
+            className="text-sm text-accent-600 hover:text-accent-700 font-medium"
           >
             Mark all as read
           </button>
         </div>
-      </div>
+      )}
 
-      <div className="max-h-96 overflow-y-auto">
+      <div className={isMobileDrawer ? "" : "max-h-96 overflow-y-auto"}>
         {notifications.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
-            <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-lg font-medium">No notifications yet</p>
-            <p className="text-sm">We'll notify you when something important happens</p>
+            <Bell className="h-8 w-8 mx-auto mb-3 text-gray-300" />
+            <p className="text-sm">No notifications yet</p>
           </div>
         ) : (
           <div>
@@ -91,7 +105,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               <div
                 key={notification.id}
                 className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${
-                  !notification.read ? "bg-accent-50 border-l-4 border-l-accent-500" : ""
+                  !notification.read ? "bg-accent-50" : ""
                 }`}
                 onClick={() => markAsRead(notification.id)}
               >
@@ -129,14 +143,16 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         )}
       </div>
 
-      <div className="p-4 bg-gray-50 border-t border-gray-200">
-        <button
-          onClick={onClose}
-          className="w-full py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors font-medium"
-        >
-          Close
-        </button>
-      </div>
+      {!isMobileDrawer && (
+        <div className="p-4 bg-gray-50 border-t border-gray-200 rounded-b-2xl">
+          <button
+            onClick={onClose}
+            className="w-full py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors font-medium"
+          >
+            Close
+          </button>
+        </div>
+      )}
     </div>
   );
 };

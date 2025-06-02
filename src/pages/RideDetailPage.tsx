@@ -111,7 +111,7 @@ const RideDetailPage: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
 
-      <main className="flex-grow py-12 bg-gradient-to-br from-accent-50 to-secondary-50">
+      <main className="flex-grow py-6 sm:py-8 lg:py-12 bg-gradient-to-br from-accent-50 to-secondary-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <RideDetail ride={currentRide} />
         </div>

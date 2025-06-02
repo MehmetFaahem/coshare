@@ -628,7 +628,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
               ? "Cancel" 
               : startingPoint 
                 ? getShortLocationName(startingPoint)
-                : "Select starting point"
+                : "Starting point"
             }
           </button>
 
