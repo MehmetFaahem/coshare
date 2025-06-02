@@ -295,12 +295,13 @@ const FloatingCallButton: React.FC<FloatingCallButtonProps> = ({ rideId }) => {
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      {/* Pulsing animation */}
-      <div className="absolute inset-0 bg-emerald-400 rounded-full animate-ping opacity-30"></div>
+      {/* Pulsing animation ring */}
+      <div className="absolute inset-0 bg-accent-400 rounded-full animate-ping opacity-30"></div>
+      <div className="absolute inset-0 bg-accent-300 rounded-full animate-ping opacity-20 animation-delay-150"></div>
 
       {/* Active ride indicator */}
       {activeRideId && (
-        <div className="absolute -top-3 -right-3 bg-white text-xs px-2 py-1 rounded-full shadow-md">
+        <div className="absolute -top-3 -right-3 bg-white text-xs px-2 py-1 rounded-full shadow-medium border border-gray-200 font-medium text-gray-700">
           {activeRideId.substring(0, 4)}
         </div>
       )}
@@ -308,19 +309,19 @@ const FloatingCallButton: React.FC<FloatingCallButtonProps> = ({ rideId }) => {
       {/* Button */}
       <button
         onClick={handleCallCreator}
-        className="relative flex items-center bg-emerald-600 text-white px-5 py-4 rounded-full shadow-xl hover:bg-emerald-700 transition-colors transform hover:scale-105 transition-all duration-200"
+        className="relative flex items-center bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white px-6 py-4 rounded-full shadow-large hover:shadow-xl transition-all duration-300 transform hover:scale-105 group"
         aria-label="Call ride creator"
       >
-        <div className="h-9 w-9 bg-white rounded-full flex items-center justify-center mr-3">
-          <Phone className="h-5 w-5 text-emerald-600" />
+        <div className="h-10 w-10 bg-white rounded-full flex items-center justify-center mr-3 group-hover:scale-110 transition-transform duration-200">
+          <Phone className="h-5 w-5 text-accent-600" />
         </div>
-        <span className="font-medium text-base">Call Ride Creator</span>
+        <span className="font-semibold text-base">Call Creator</span>
       </button>
 
       {/* Debug info panel */}
       {DEBUG_MODE && (
         <div
-          className="absolute bottom-20 right-0 bg-white border border-gray-300 p-3 rounded-lg shadow-lg max-w-xs overflow-auto"
+          className="absolute bottom-20 right-0 bg-white border border-gray-300 p-3 rounded-2xl shadow-large max-w-xs overflow-auto"
           style={{ maxHeight: "400px" }}
         >
           <h4 className="font-bold mb-2">Debug Info</h4>

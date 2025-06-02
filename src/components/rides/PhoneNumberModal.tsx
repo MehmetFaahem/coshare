@@ -32,69 +32,54 @@ const PhoneNumberModal: React.FC<PhoneNumberModalProps> = ({
       return;
     }
 
+    setError("");
     onSubmit(phoneNumber);
     setPhoneNumber("");
-    setError("");
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Contact Information">
       <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <p className="text-gray-600 mb-4">
-            Please provide a phone number where passengers can reach you during
-            the ride.
-          </p>
-
-          <label
-            className="block text-gray-700 text-sm font-bold mb-2"
-            htmlFor="phoneNumber"
-          >
-            Phone Number
+        <div className="mb-6">
+          <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-3">
+            Your Phone Number
           </label>
-
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Phone size={18} className="text-gray-500" />
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Phone className="h-5 w-5 text-gray-400" />
             </div>
             <input
-              id="phoneNumber"
               type="tel"
-              className={`w-full pl-10 pr-3 py-2 border ${
-                error ? "border-red-500" : "border-gray-300"
-              } rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent`}
-              placeholder="+123 456 7890"
+              id="phone"
+              className="block w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent-500 focus:border-accent-500 transition-colors"
+              placeholder="+1234567890"
               value={phoneNumber}
-              onChange={(e) => {
-                setPhoneNumber(e.target.value);
-                if (error) setError("");
-              }}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              required
             />
           </div>
+          {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
 
-          {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
-
-          <p className="mt-2 text-xs text-gray-500">
-            This number will be shared with passengers who join your ride
-          </p>
+          <div className="mt-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+            <p className="text-sm text-blue-700">
+              <strong>📱 Why we need this:</strong> Your phone number will be shared with other passengers once they join your ride, making it easy to coordinate meeting points and timing.
+            </p>
+          </div>
         </div>
 
-        <div className="flex justify-end space-x-3 mt-6">
+        <div className="flex justify-end space-x-3">
           <button
             type="button"
-            className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none"
+            className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-xl hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
             onClick={onClose}
           >
             Cancel
           </button>
           <button
             type="submit"
-            onClick={() => {
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className="px-4 py-2 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+            className="px-6 py-3 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-medium focus:outline-none focus:ring-2 focus:ring-accent-400"
           >
-            Submit
+            Create Ride
           </button>
         </div>
       </form>

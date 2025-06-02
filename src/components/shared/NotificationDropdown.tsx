@@ -29,9 +29,9 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case "match":
-        return <CheckCircle className="h-5 w-5 text-emerald-500" />;
+        return <CheckCircle className="h-5 w-5 text-accent-500" />;
       case "update":
-        return <Info className="h-5 w-5 text-blue-500" />;
+        return <Info className="h-5 w-5 text-secondary-500" />;
       case "join":
         return <Users className="h-5 w-5 text-purple-500" />;
       case "leave":
@@ -60,16 +60,16 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   };
 
   return (
-    <div className="absolute right-0 mt-2 w-80 bg-white rounded-md shadow-lg overflow-hidden z-20">
-      <div className="p-4 border-b border-gray-200">
+    <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-large overflow-hidden z-20 border border-gray-100">
+      <div className="p-6 bg-gradient-to-r from-accent-50 to-accent-100 border-b border-gray-200">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-800">Notifications</h3>
+          <h3 className="text-xl font-bold text-gray-900">Notifications</h3>
           <button
             onClick={markAllAsRead}
             disabled={!notifications.some((n) => !n.read)}
-            className={`text-sm ${
+            className={`text-sm font-medium transition-colors ${
               notifications.some((n) => !n.read)
-                ? "text-emerald-600 hover:text-emerald-800"
+                ? "text-accent-600 hover:text-accent-700"
                 : "text-gray-400 cursor-not-allowed"
             }`}
           >
@@ -80,28 +80,30 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
 
       <div className="max-h-96 overflow-y-auto">
         {notifications.length === 0 ? (
-          <div className="p-4 text-center text-gray-500">
-            No notifications yet
+          <div className="p-8 text-center text-gray-500">
+            <Bell className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+            <p className="text-lg font-medium">No notifications yet</p>
+            <p className="text-sm">We'll notify you when something important happens</p>
           </div>
         ) : (
           <div>
             {notifications.map((notification) => (
               <div
                 key={notification.id}
-                className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
-                  !notification.read ? "bg-emerald-50" : ""
+                className={`p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${
+                  !notification.read ? "bg-accent-50 border-l-4 border-l-accent-500" : ""
                 }`}
                 onClick={() => markAsRead(notification.id)}
               >
                 <div className="flex">
-                  <div className="flex-shrink-0 mr-3">
+                  <div className="flex-shrink-0 mr-3 mt-1">
                     {getNotificationIcon(notification.type)}
                   </div>
                   <div className="w-full">
                     <div className="flex justify-between">
                       <p
-                        className={`text-sm ${
-                          !notification.read ? "font-medium" : "text-gray-700"
+                        className={`text-sm leading-relaxed ${
+                          !notification.read ? "font-medium text-gray-900" : "text-gray-700"
                         }`}
                       >
                         {notification.message}
@@ -113,10 +115,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                     {notification.rideId && (
                       <Link
                         to={`/rides/${notification.rideId}`}
-                        className="mt-1 text-xs text-emerald-600 hover:text-emerald-800"
+                        className="mt-2 text-xs text-accent-600 hover:text-accent-700 font-medium"
                         onClick={onClose}
                       >
-                        View ride details
+                        View ride details →
                       </Link>
                     )}
                   </div>
@@ -127,10 +129,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         )}
       </div>
 
-      <div className="p-2 bg-gray-50 border-t border-gray-200">
+      <div className="p-4 bg-gray-50 border-t border-gray-200">
         <button
           onClick={onClose}
-          className="w-full py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+          className="w-full py-2 text-sm text-gray-600 hover:text-gray-800 transition-colors font-medium"
         >
           Close
         </button>

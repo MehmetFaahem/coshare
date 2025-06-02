@@ -1,6 +1,6 @@
 import React, { useCallback } from "react";
 import { RideRequest } from "../../types";
-import { MapPin, Navigation, Users, Calendar } from "lucide-react";
+import { MapPin, Navigation, Users, Calendar, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -30,10 +30,9 @@ const RideCard: React.FC<RideCardProps> = ({
   const canComplete =
     isCreator && ride.status !== "completed" && ride.status !== "cancelled";
 
-  // Action handlers - using useCallback to prevent unnecessary re-renders
   const handleAction = useCallback(
-    (actionType: string) => {
-      switch (actionType) {
+    (action: "join" | "cancel" | "complete" | "view") => {
+      switch (action) {
         case "join":
           if (onJoin) onJoin(ride.id);
           break;
@@ -46,150 +45,118 @@ const RideCard: React.FC<RideCardProps> = ({
         case "view":
           navigate(`/rides/${ride.id}`);
           break;
-        default:
-          break;
       }
-      // Scroll to top after any action
-      window.scrollTo(0, 0);
     },
     [ride.id, onJoin, onCancel, onComplete, navigate]
   );
 
-  // Formatting helpers
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+  const getStatusBadge = (status: string) => {
+    const badges = {
+      open: "bg-green-100 text-green-800 border-green-200",
+      full: "bg-blue-100 text-blue-800 border-blue-200",
+      completed: "bg-gray-100 text-gray-800 border-gray-200",
+      cancelled: "bg-red-100 text-red-800 border-red-200",
+    };
+    
+    const statusText = {
+      open: "Open",
+      full: "Full",
+      completed: "Completed",
+      cancelled: "Cancelled",
+    };
+
+    return (
+      <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${badges[status as keyof typeof badges] || badges.open}`}>
+        {statusText[status as keyof typeof statusText] || "Unknown"}
+      </span>
+    );
   };
 
-  const formatTime = (dateString: string) => {
+  const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleTimeString(undefined, {
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
-  // Status badge renderer
-  const renderStatusBadge = () => {
-    const statusConfig = {
-      open: {
-        bg: "bg-emerald-100",
-        text: "text-emerald-800",
-        dot: "bg-emerald-500",
-        label: "Open",
-      },
-      full: {
-        bg: "bg-amber-100",
-        text: "text-amber-800",
-        dot: "bg-amber-500",
-        label: "Full",
-      },
-      completed: {
-        bg: "bg-blue-100",
-        text: "text-blue-800",
-        dot: "bg-blue-500",
-        label: "Completed",
-      },
-      cancelled: {
-        bg: "bg-red-100",
-        text: "text-red-800",
-        dot: "bg-red-500",
-        label: "Cancelled",
-      },
-    };
-
-    const config = statusConfig[ride.status];
-    if (!config) return null;
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
-      >
-        <span className={`h-2 w-2 rounded-full ${config.dot} mr-1`}></span>
-        {config.label}
-      </span>
-    );
-  };
-
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg">
-      <div className="p-5">
-        {/* Header */}
-        <div className="flex justify-between items-start mb-3">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800">
-              Ride #{ride.id.substring(0, 4)}
-            </h3>
-            <p className="text-gray-600 text-sm flex items-center mt-1">
-              <Calendar className="h-4 w-4 mr-1" />
-              {formatDate(ride.createdAt)} at {formatTime(ride.createdAt)}
-            </p>
+    <div className="card-hover bg-white rounded-2xl shadow-soft hover:shadow-medium border border-gray-100 overflow-hidden transition-all duration-300">
+      {/* Header */}
+      <div className="p-6 bg-gradient-to-r from-accent-50 to-accent-100 border-b border-gray-200">
+        <div className="flex justify-between items-start mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-accent-400 to-accent-500 rounded-full flex items-center justify-center">
+              <Navigation className="h-6 w-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-gray-900">
+                {isCreator ? "Your Ride" : "Available Ride"}
+              </h3>
+              <div className="flex items-center text-sm text-gray-600">
+                <Clock className="h-4 w-4 mr-1" />
+                {formatDate(ride.createdAt)}
+              </div>
+            </div>
           </div>
-          {renderStatusBadge()}
+          {getStatusBadge(ride.status)}
         </div>
+      </div>
 
-        {/* Ride info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <div className="flex items-start mb-2">
-              <MapPin className="h-5 w-5 text-emerald-600 mt-0.5 mr-2 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-gray-500 font-medium">FROM</p>
-                <p className="text-sm text-gray-800">
-                  {ride.startingPoint.address}
-                </p>
-              </div>
+      {/* Content */}
+      <div className="p-6 space-y-4">
+        {/* Route Information */}
+        <div className="space-y-3">
+          <div className="flex items-start space-x-3">
+            <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <MapPin className="h-4 w-4 text-green-600" />
             </div>
-
-            <div className="flex items-start">
-              <Navigation className="h-5 w-5 text-red-500 mt-0.5 mr-2 flex-shrink-0" />
-              <div>
-                <p className="text-xs text-gray-500 font-medium">TO</p>
-                <p className="text-sm text-gray-800">
-                  {ride.destination.address}
-                </p>
-              </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">From</p>
+              <p className="text-sm text-gray-900 font-medium truncate">
+                {ride.startingPoint.address}
+              </p>
             </div>
           </div>
 
-          <div className="flex flex-col justify-center">
-            <div className="flex items-center mb-2">
-              <Users className="h-5 w-5 text-gray-500 mr-2" />
-              <div className="w-full">
-                <div className="flex justify-between items-center mb-1">
-                  <span className="text-sm font-medium">
-                    {ride.passengers.length}/{ride.totalSeats} passengers
-                  </span>
-                  <span className="text-xs text-gray-500">
-                    {ride.seatsAvailable} seats available
-                  </span>
-                </div>
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-emerald-500"
-                    style={{
-                      width: `${
-                        (ride.passengers.length / ride.totalSeats) * 100
-                      }%`,
-                    }}
-                  ></div>
-                </div>
-              </div>
+          <div className="flex items-start space-x-3">
+            <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+              <MapPin className="h-4 w-4 text-red-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">To</p>
+              <p className="text-sm text-gray-900 font-medium truncate">
+                {ride.destination.address}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Actions */}
-        <div className="flex flex-wrap gap-2 mt-4">
+        {/* Seats Information */}
+        <div className="bg-gray-50 rounded-xl p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Users className="h-5 w-5 text-gray-400" />
+              <span className="text-sm font-medium text-gray-700">Seats</span>
+            </div>
+            <div className="text-right">
+              <span className="text-lg font-bold text-gray-900">
+                {ride.seatsAvailable}/{ride.totalSeats}
+              </span>
+              <p className="text-xs text-gray-500">available</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex flex-wrap gap-2 pt-4 border-t border-gray-200">
           {canJoin && onJoin && (
             <button
               type="button"
               onClick={() => handleAction("join")}
-              className="inline-flex items-center px-3 py-1.5 bg-emerald-600 text-white text-sm font-medium rounded-md hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
+              className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-medium"
             >
               Join Ride
             </button>
@@ -199,7 +166,7 @@ const RideCard: React.FC<RideCardProps> = ({
             <button
               type="button"
               onClick={() => handleAction("cancel")}
-              className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+              className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition-colors"
             >
               {isCreator ? "Cancel Ride" : "Leave Ride"}
             </button>
@@ -209,7 +176,7 @@ const RideCard: React.FC<RideCardProps> = ({
             <button
               type="button"
               onClick={() => handleAction("complete")}
-              className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-medium"
             >
               Complete Ride
             </button>
@@ -218,7 +185,7 @@ const RideCard: React.FC<RideCardProps> = ({
           <button
             type="button"
             onClick={() => handleAction("view")}
-            className="inline-flex items-center px-3 py-1.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            className="flex-1 inline-flex items-center justify-center px-4 py-2.5 border-2 border-gray-200 hover:border-accent-300 hover:bg-accent-50 text-gray-700 hover:text-accent-700 text-sm font-semibold rounded-xl transition-all duration-200"
           >
             View Details
           </button>
