@@ -294,7 +294,7 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
         <div className="absolute left-3 text-gray-500">{icon}</div>
         <input
           type="text"
-          className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+          className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:outline-none "
           placeholder={placeholder}
           value={query}
           onChange={handleInputChange}
@@ -586,7 +586,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
         </div>
       )}
 
-      <div className="mb-6 space-y-4">
+      <div className="mb-6 space-y-4 p-2">
         <LocationSearchInput
           placeholder="Search for starting point..."
           icon={<MapPin size={18} />}
