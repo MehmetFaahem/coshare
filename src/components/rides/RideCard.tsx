@@ -176,7 +176,7 @@ const RideCard: React.FC<RideCardProps> = ({
             <button
               type="button"
               onClick={() => handleAction("complete")}
-              className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-medium"
+              className="flex-1 inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 text-white text-sm font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-medium"
             >
               Complete Ride
             </button>

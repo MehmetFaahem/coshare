@@ -50,8 +50,8 @@ const endIcon = new L.Icon({
   className: "end-marker",
 });
 
-// Debounce utility function
-function debounce<T extends (...args: unknown[]) => unknown>(
+// Fix the debounce function to properly handle typed parameters
+function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
@@ -76,7 +76,7 @@ const MapEvents = ({
   // We don't need to store map as a variable if not used
   useMap();
 
-  // Debounce the reverse geocoding API call
+  // Fix the debouncedGeocode function
   const debouncedGeocode = useCallback(
     debounce(
       async (
@@ -163,71 +163,82 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
       display_name: string;
       lat: string;
       lon: string;
+      placeholder?: boolean;
     }>
   >([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Search for locations using OpenStreetMap Nominatim geocoding API with Google fallback
-  const searchLocations = async (searchQuery: string) => {
+  // Search for locations using OpenStreetMap Nominatim geocoding API
+  const searchLocations = useCallback(async (searchQuery: string) => {
+    console.log("Searching for:", searchQuery);
     if (!searchQuery.trim()) {
       setSuggestions([]);
+      setShowSuggestions(false);
       return;
     }
 
-    setLoading(true);
+    setIsLoading(true);
     try {
-      // First try with Nominatim
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
           searchQuery
-        )}&limit=5`
+        )}&limit=5&countrycodes=bd&addressdetails=1`
       );
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch location data from Nominatim");
-      }
-
       const data = await response.json();
+      console.log("Search results:", data);
 
       if (data && data.length > 0) {
         setSuggestions(data);
+        setShowSuggestions(true);
       } else {
-        // If no results from Nominatim, try with Google Maps tiles geocoding
-        // This is a workaround and might not be as accurate as the official Google Geocoding API
-        console.log("No results from Nominatim, trying alternative sources");
-
-        // For demonstration, we'll just show a message
-        // In a real app, you might want to implement a custom geocoding solution
         setSuggestions([
           {
-            display_name: `Search for "${searchQuery}" returned no results`,
+            display_name: `No results found for "${searchQuery}"`,
             lat: "0",
             lon: "0",
             placeholder: true,
           },
         ]);
+        setShowSuggestions(true);
       }
     } catch (error) {
       console.error("Error searching for locations:", error);
-      setSuggestions([]);
+      setSuggestions([
+        {
+          display_name: "Error searching for locations",
+          lat: "0",
+          lon: "0",
+          placeholder: true,
+        },
+      ]);
+      setShowSuggestions(true);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  };
+  }, []);
 
-  // Debounce search function to avoid too many searches
+  // Fix the debouncedSearch function with proper dependencies
   const debouncedSearch = useCallback(
     debounce((searchQuery: string) => {
       searchLocations(searchQuery);
     }, 500),
-    []
+    [searchLocations]
   );
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setQuery(value);
-    debouncedSearch(value);
-    setShowSuggestions(true);
+    const inputValue = e.target.value;
+    console.log("Search input changed:", inputValue);
+    setQuery(inputValue);
+    
+    if (inputValue.trim()) {
+      debouncedSearch(inputValue);
+      setShowSuggestions(true);
+    } else {
+      setSuggestions([]);
+      setShowSuggestions(false);
+    }
   };
 
   const selectLocation = (item: {
@@ -255,9 +266,10 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
 
     // Center map on the selected location with animation and zoom
     if (mapRef.current) {
-      mapRef.current.setView([lat, lng], 15, {
+      // Use flyTo for a smooth animated transition to the selected location
+      mapRef.current.flyTo([lat, lng], 16, {
         animate: true,
-        duration: 1,
+        duration: 1.5,
       });
     }
 
@@ -286,7 +298,11 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
           placeholder={placeholder}
           value={query}
           onChange={handleInputChange}
-          onFocus={() => setShowSuggestions(true)}
+          onFocus={() => {
+            if (query.trim() && suggestions.length > 0) {
+              setShowSuggestions(true);
+            }
+          }}
           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
         />
         {value && (
@@ -297,40 +313,56 @@ const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
             <X size={16} />
           </button>
         )}
+        {isLoading && (
+          <div className="absolute right-8 text-gray-500">
+            <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-emerald-500"></div>
+          </div>
+        )}
       </div>
 
       {showSuggestions && (
         <div className="absolute z-[100] mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
-          {suggestions.length === 0 && query !== "" && !setLoading && (
+          {isLoading ? (
             <div className="px-4 py-2 text-center text-gray-500">
-              No locations found
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-emerald-500"></div>
+                <span className="ml-2">Searching...</span>
+              </div>
             </div>
-          )}
-
-          {suggestions.map((item, index) => (
-            <div
-              key={index}
-              className={`px-4 py-2 hover:bg-gray-100 ${
-                item.placeholder
-                  ? "text-gray-500 cursor-default"
-                  : "cursor-pointer"
-              }`}
-              onClick={() => !item.placeholder && selectLocation(item)}
-            >
-              {item.placeholder ? (
-                <div className="text-center italic">{item.display_name}</div>
-              ) : (
-                <>
-                  <div className="font-medium">
-                    {item.display_name.split(",")[0]}
-                  </div>
-                  <div className="text-sm text-gray-500">
-                    {item.display_name}
-                  </div>
-                </>
+          ) : (
+            <>
+              {suggestions.length === 0 && query !== "" && (
+                <div className="px-4 py-2 text-center text-gray-500">
+                  No locations found
+                </div>
               )}
-            </div>
-          ))}
+
+              {suggestions.map((item, index) => (
+                <div
+                  key={index}
+                  className={`px-4 py-2 hover:bg-gray-100 ${
+                    item.placeholder
+                      ? "text-gray-500 cursor-default"
+                      : "cursor-pointer"
+                  }`}
+                  onClick={() => !item.placeholder && selectLocation(item)}
+                >
+                  {item.placeholder ? (
+                    <div className="text-center italic">{item.display_name}</div>
+                  ) : (
+                    <>
+                      <div className="font-medium">
+                        {item.display_name.split(",")[0]}
+                      </div>
+                      <div className="text-sm text-gray-500">
+                        {item.display_name}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </>
+          )}
         </div>
       )}
     </div>
@@ -370,6 +402,12 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
   >(null);
   const [loading, setLoading] = useState(false);
   const mapRef = useRef<L.Map>(null);
+
+  // Helper function to get short location name
+  const getShortLocationName = (location: Location | null) => {
+    if (!location) return null;
+    return location.address.split(',')[0].trim();
+  };
 
   // Get user's current location on component mount
   useEffect(() => {
@@ -528,6 +566,26 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
 
   return (
     <div>
+      {/* Full Screen Loader */}
+      {loading && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-[9999] flex items-center justify-center">
+          <div className="bg-white rounded-2xl p-8 shadow-2xl flex flex-col items-center space-y-4">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-accent-500"></div>
+              <div className="absolute inset-0 rounded-full border-4 border-accent-100"></div>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                Getting Location Details
+              </h3>
+              <p className="text-gray-600">
+                Please wait while we fetch the address...
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6 space-y-4">
         <LocationSearchInput
           placeholder="Search for starting point..."
@@ -564,8 +622,14 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
                 selectingLocation === "start" ? null : "start"
               )
             }
+            disabled={loading}
           >
-            {selectingLocation === "start" ? "Cancel" : "Select starting point"}
+            {selectingLocation === "start" 
+              ? "Cancel" 
+              : startingPoint 
+                ? getShortLocationName(startingPoint)
+                : "Select starting point"
+            }
           </button>
 
           <button
@@ -580,27 +644,27 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
                 selectingLocation === "destination" ? null : "destination"
               )
             }
+            disabled={loading}
           >
             {selectingLocation === "destination"
               ? "Cancel"
-              : "Select destination"}
+              : destination
+                ? getShortLocationName(destination)
+                : "Select destination"
+            }
           </button>
         </div>
       </div>
 
       <div className="relative z-[10] h-[200px]">
-        {loading && (
-          <div className="absolute inset-0 bg-white bg-opacity-70 z-10 flex items-center justify-center">
-            <div className="text-emerald-600 font-medium">Loading...</div>
-          </div>
-        )}
-
         <MapContainer
           center={getCenterPosition()}
           zoom={13}
           style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-          whenReady={(e) => {
-            mapRef.current = e.target;
+          whenReady={(e: L.LeafletEvent) => {
+            if ('target' in e && e.target instanceof L.Map) {
+              mapRef.current = e.target;
+            }
           }}
         >
           <MapTileLayers />
@@ -707,9 +771,10 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
         {/* Map controls */}
         <div className="absolute bottom-4 right-4 flex flex-col space-y-2">
           <button
-            className="bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors"
+            className="bg-white rounded-full p-2 shadow-md hover:bg-gray-100 transition-colors disabled:opacity-50"
             onClick={handleGetCurrentLocation}
             title="Get your current location"
+            disabled={loading}
           >
             <Navigation className="h-5 w-5 text-gray-700" />
           </button>
