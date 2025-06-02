@@ -13,10 +13,10 @@ const FindRidesPage: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-grow flex items-center justify-center">
+        <main className="flex-grow flex items-center justify-center bg-gradient-to-br from-accent-50 to-secondary-50">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading...</p>
+            <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-accent-500 mx-auto"></div>
+            <p className="mt-6 text-gray-600 text-lg">Loading...</p>
           </div>
         </main>
         <Footer />
@@ -33,8 +33,14 @@ const FindRidesPage: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-grow py-8 bg-gray-50">
+      <main className="flex-grow py-12 bg-gradient-to-br from-accent-50 to-secondary-50">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Find Your Perfect Ride</h1>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+              Discover rides going your way and connect with fellow travelers
+            </p>
+          </div>
           <FindRideForm />
         </div>
       </main>

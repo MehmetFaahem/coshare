@@ -11,7 +11,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
       <div className="bg-white text-gray-800 rounded-lg w-full max-w-3xl max-h-[80vh] overflow-y-auto">
-        <div className="sticky top-0 bg-emerald-700 text-white py-4 px-6 flex justify-between items-center">
+        <div className="sticky top-0 bg-primary-700 text-white py-4 px-6 flex justify-between items-center">
           <h2 className="text-xl font-bold">Privacy Policy</h2>
           <button onClick={onClose} className="text-white hover:text-gray-200">
             ✕
@@ -138,7 +138,7 @@ const PrivacyModal: React.FC<PrivacyModalProps> = ({ isOpen, onClose }) => {
         <div className="bg-gray-100 px-6 py-4 flex justify-end">
           <button
             onClick={onClose}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded transition-colors"
+            className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded transition-colors"
           >
             Close
           </button>

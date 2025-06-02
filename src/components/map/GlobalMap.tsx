@@ -554,7 +554,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
         <div className="flex space-x-2">
           <button
             type="button"
-            className={`flex-1 text-[12px] px-3 py-2 border rounded-md ${
+            className={`btn-modern w-1/2 max-md:w-full py-4 px-6 bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-white font-semibold rounded-2xl transition-all duration-300 transform shadow-medium hover:shadow-large disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center ${
               selectingLocation === "start"
                 ? "bg-emerald-600 text-white"
                 : "bg-emerald-900 text-white"
@@ -570,7 +570,7 @@ const GlobalMap: React.FC<GlobalMapProps> = ({
 
           <button
             type="button"
-            className={`flex-1 text-[12px] px-3 py-2 border rounded-md ${
+            className={`btn-modern w-1/2 max-md:w-full py-4 px-6 bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-white font-semibold rounded-2xl transition-all duration-300 transform shadow-medium hover:shadow-large disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center ${
               selectingLocation === "destination"
                 ? "bg-emerald-600 text-white"
                 : "bg-black text-white"

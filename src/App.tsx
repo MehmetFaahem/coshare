@@ -79,7 +79,7 @@ function App() {
                   success: {
                     duration: 3000,
                     iconTheme: {
-                      primary: "#10B981",
+                      primary: "#f97316",
                       secondary: "#FFFFFF",
                     },
                   },

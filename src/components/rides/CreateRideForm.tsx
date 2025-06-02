@@ -6,6 +6,7 @@ import { Location } from "../../types";
 import GlobalMap from "../map/GlobalMap";
 import { useNotification } from "../../contexts/NotificationContext";
 import PhoneNumberModal from "./PhoneNumberModal";
+import { MapPin, Users, ArrowRight } from "lucide-react";
 
 const CreateRideForm: React.FC = () => {
   const [startingPoint, setStartingPoint] = useState<Location | null>(null);
@@ -59,101 +60,159 @@ const CreateRideForm: React.FC = () => {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4 text-gray-800">
-            Create a New Ride Request
-          </h2>
+    <div className="w-full max-w-6xl mx-auto">
+      <div className="bg-white shadow-large rounded-3xl overflow-hidden border border-gray-100">
+        <div className="p-8">
+          
 
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <GlobalMap
-                  startingPoint={startingPoint}
-                  destination={destination}
-                  onStartingPointChange={setStartingPoint}
-                  onDestinationChange={setDestination}
-                  height="350px"
-                />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Map Section */}
+              <div className="space-y-6">
+                <div className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-200">
+                  <GlobalMap
+                    startingPoint={startingPoint}
+                    destination={destination}
+                    onStartingPointChange={setStartingPoint}
+                    onDestinationChange={setDestination}
+                    height="400px"
+                  />
+                </div>
 
-                <div className="mt-6 mb-6">
-                  <label className="block text-gray-700 text-sm font-bold mb-2">
-                    Total Seats (including you)
-                  </label>
-                  <div className="flex items-center space-x-2">
+                {/* Seat Selection */}
+                <div className="bg-accent-50 rounded-2xl p-6 border border-accent-200">
+                  <div className="flex items-center mb-4">
+                    <Users className="h-6 w-6 text-accent-600 mr-3" />
+                    <label className="text-lg font-semibold text-gray-900">
+                      Total Seats (including you)
+                    </label>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
                     {[2, 3, 4, 5].map((seats) => (
                       <button
                         key={seats}
                         type="button"
-                        className={`flex-1 py-2 px-4 border ${
-                          totalSeats === seats
-                            ? "bg-emerald-600 text-white border-emerald-600"
-                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                        } rounded-md transition-colors focus:outline-none`}
                         onClick={() => setTotalSeats(seats)}
+                        className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
+                          totalSeats === seats
+                            ? "bg-accent-500 text-white shadow-medium transform scale-105"
+                            : "bg-white text-accent-600 border-2 border-accent-200 hover:border-accent-400 hover:bg-accent-50"
+                        }`}
                       >
-                        {seats}
+                        {seats} seats
                       </button>
                     ))}
                   </div>
-                  <p className="mt-2 text-sm text-gray-500">
-                    A standard rickshaw can accommodate up to 5 passengers.
+                  <p className="mt-4 text-sm text-accent-700 bg-accent-100 p-3 rounded-xl">
+                    💡 A standard ride can accommodate up to 5 passengers comfortably
                   </p>
                 </div>
 
-                <div className="mb-6">
-                  <button
-                    type="submit"
-                    className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-md shadow transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-70"
-                    disabled={isSubmitting || !startingPoint || !destination}
-                  >
-                    {isSubmitting ? "Creating Ride..." : "Create Ride Request"}
-                  </button>
-                </div>
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  className="btn-modern w-full py-4 px-6 bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-medium hover:shadow-large disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
+                  disabled={isSubmitting || !startingPoint || !destination}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>
+                      Creating Ride...
+                    </>
+                  ) : (
+                    <>
+                      Create Ride Request
+                      <ArrowRight className="w-5 h-5" />
+                    </>
+                  )}
+                </button>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="text-lg font-semibold mb-4">Ride Details</h3>
+              {/* Details Panel */}
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-secondary-50 to-accent-50 rounded-2xl p-6 border border-gray-200">
+                  <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                    <MapPin className="h-6 w-6 text-secondary-600 mr-3" />
+                    Ride Summary
+                  </h3>
 
-                {startingPoint && (
-                  <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-700">
-                      Starting Point:
+                  {startingPoint ? (
+                    <div className="mb-6 p-4 bg-white rounded-xl border border-gray-200">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">
+                        Starting Point:
+                      </p>
+                      <p className="text-gray-900 font-medium">
+                        {startingPoint.address}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mb-6 p-4 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300">
+                      <p className="text-gray-500 text-center">
+                        📍 Select your starting point on the map
+                      </p>
+                    </div>
+                  )}
+
+                  {destination ? (
+                    <div className="mb-6 p-4 bg-white rounded-xl border border-gray-200">
+                      <p className="text-sm font-semibold text-gray-700 mb-2">
+                        Destination:
+                      </p>
+                      <p className="text-gray-900 font-medium">
+                        {destination.address}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mb-6 p-4 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300">
+                      <p className="text-gray-500 text-center">
+                        🎯 Select your destination on the map
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="p-4 bg-white rounded-xl border border-gray-200">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">
+                      Available Seats:
                     </p>
-                    <p className="text-sm text-gray-600">
-                      {startingPoint.address}
+                    <p className="text-gray-900 font-medium">
+                      {totalSeats} passengers total (including you)
                     </p>
                   </div>
-                )}
-
-                {destination && (
-                  <div className="mb-4">
-                    <p className="text-sm font-medium text-gray-700">
-                      Destination:
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {destination.address}
-                    </p>
-                  </div>
-                )}
-
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-700">
-                    Seats Available:
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {totalSeats} (including you)
-                  </p>
                 </div>
 
-                <div className="text-sm text-gray-500 mt-6">
-                  <p>Need help?</p>
-                  <ul className="list-disc pl-5 mt-2 space-y-1">
-                    <li>Use the search box to find a location</li>
-                    <li>Drag markers to refine exact positions</li>
-                    <li>Click anywhere on the map to set a location</li>
+                {/* Help Section */}
+                <div className="bg-amber-50 rounded-2xl p-6 border border-amber-200">
+                  <h4 className="text-lg font-semibold text-amber-800 mb-4">
+                    📚 Quick Guide
+                  </h4>
+                  <ul className="space-y-3 text-amber-700">
+                    <li className="flex items-start">
+                      <span className="text-amber-500 mr-2">•</span>
+                      Use the search box to find locations quickly
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-amber-500 mr-2">•</span>
+                      Drag markers to adjust exact pickup points
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-amber-500 mr-2">•</span>
+                      Click anywhere on the map to set locations
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-amber-500 mr-2">•</span>
+                      Choose seat count based on ride capacity
+                    </li>
                   </ul>
+                </div>
+
+                {/* Important Notice */}
+                <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+                  <h4 className="text-lg font-semibold text-blue-800 mb-3">
+                    ℹ️ Important Notice
+                  </h4>
+                  <p className="text-blue-700">
+                    This app helps you find co-passengers. You'll need to arrange for a ride offline once your group is formed. We recommend meeting at the starting point 10 minutes before departure.
+                  </p>
                 </div>
               </div>
             </div>

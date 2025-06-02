@@ -1,8 +1,8 @@
-# Rickshaw Share Project Documentation
+# Ride Share Project Documentation
 
 ## Project Overview
 
-Rickshaw Share is a modern web application built with React and TypeScript, utilizing Vite as the build tool. The project appears to be a location-based sharing platform for rickshaws, incorporating real-time features and map functionality.
+Ride Share is a modern web application built with React and TypeScript, utilizing Vite as the build tool. The project appears to be a location-based sharing platform for rides, incorporating real-time features and map functionality.
 
 ## Tech Stack
 

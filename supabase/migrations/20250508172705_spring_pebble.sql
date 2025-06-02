@@ -1,5 +1,5 @@
 /*
-  # Initial Schema Setup for Rickshaw Share
+  # Initial Schema Setup for Ride Share
 
   1. New Tables
     - `users`

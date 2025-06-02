@@ -426,7 +426,7 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
             <p className="text-amber-800">
               <strong>Important:</strong> This app only helps you find
               co-passengers. Once your group is formed, you'll need to arrange
-              for a rickshaw offline. We recommend meeting at the starting point
+              for a ride offline. We recommend meeting at the starting point
               10 minutes before your planned departure.
             </p>
           </div>

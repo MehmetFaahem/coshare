@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { Mail, Lock, LogIn } from "lucide-react";
+import { Mail, Lock, LogIn, Eye, EyeOff } from "lucide-react";
 import { redirectAfterLogin } from "../../lib/sessionHelper";
 
 interface ApiError {
@@ -14,6 +14,7 @@ interface ApiError {
 const LoginForm: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { login, isAuthenticated, user } = useAuth();
@@ -53,27 +54,27 @@ const LoginForm: React.FC = () => {
 
   return (
     <div className="w-full max-w-md">
-      <div className="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
-        <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
-          Login to Your Account
+      <div className="bg-white shadow-large rounded-3xl px-8 pt-8 pb-8 mb-4 border border-gray-100">
+        <h2 className="text-3xl font-bold mb-8 text-center text-gray-900">
+          Welcome back
         </h2>
 
-        <form onSubmit={handleSubmit}>
-          <div className="mb-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
             <label
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="block text-gray-700 text-sm font-semibold mb-3"
               htmlFor="email"
             >
               Email
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Mail className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 id="email"
                 type="email"
-                className="appearance-none border rounded-lg w-full py-3 pl-10 pr-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-emerald-500 transition-colors"
+                className="appearance-none border border-gray-200 rounded-2xl w-full py-4 pl-12 pr-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -82,36 +83,47 @@ const LoginForm: React.FC = () => {
             </div>
           </div>
 
-          <div className="mb-6">
+          <div>
             <label
-              className="block text-gray-700 text-sm font-bold mb-2"
+              className="block text-gray-700 text-sm font-semibold mb-3"
               htmlFor="password"
             >
               Password
             </label>
             <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                 <Lock className="h-5 w-5 text-gray-400" />
               </div>
               <input
                 id="password"
-                type="password"
-                className="appearance-none border rounded-lg w-full py-3 pl-10 pr-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline focus:border-emerald-500 transition-colors"
+                type={showPassword ? "text" : "password"}
+                className="appearance-none border border-gray-200 rounded-2xl w-full py-4 pl-12 pr-12 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-accent-400 focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <button
+                type="button"
+                className="absolute inset-y-0 right-0 pr-4 flex items-center"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                ) : (
+                  <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                )}
+              </button>
             </div>
           </div>
 
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center justify-between">
             <div className="flex items-center">
               <input
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                className="h-4 w-4 text-accent-600 focus:ring-accent-500 border-gray-300 rounded"
               />
               <label
                 htmlFor="remember-me"
@@ -124,33 +136,33 @@ const LoginForm: React.FC = () => {
             <div className="text-sm">
               <Link
                 to="/forgot-password"
-                className="font-semibold text-emerald-600 hover:text-emerald-500"
+                className="font-semibold text-accent-600 hover:text-accent-500 transition-colors"
               >
                 Forgot password?
               </Link>
             </div>
           </div>
 
-          <div className="mb-6">
+          <div>
             <button
               type="submit"
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-emerald-600 hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+              className="group relative w-full flex justify-center py-4 px-4 border border-transparent text-sm font-semibold rounded-2xl text-white bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-accent-500 transition-all duration-200 transform hover:scale-105 shadow-medium hover:shadow-large disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               disabled={isSubmitting}
             >
               <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                <LogIn className="h-5 w-5 text-emerald-300 group-hover:text-emerald-200 transition-colors" />
+                <LogIn className="h-5 w-5 text-accent-200 group-hover:text-accent-100 transition-colors" />
               </span>
               {isSubmitting ? "Logging in..." : "Sign in"}
             </button>
           </div>
         </form>
 
-        <div className="text-center">
+        <div className="text-center mt-6">
           <p className="text-sm text-gray-600">
             Don't have an account?{" "}
             <Link
               to="/register"
-              className="font-semibold text-emerald-600 hover:text-emerald-500"
+              className="font-semibold text-accent-600 hover:text-accent-500 transition-colors"
             >
               Sign up
             </Link>

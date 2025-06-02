@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useRide } from "../contexts/RideContext";
 import { useAbly } from "../contexts/AblyContext";
 import { Link, useNavigate } from "react-router-dom";
-import { Users, Plus, MapPin, ChevronsRight } from "lucide-react";
+import { Users, Plus, MapPin, ChevronsRight, TrendingUp, Clock, CheckCircle } from "lucide-react";
 import RideList from "../components/rides/RideList";
 import { getAuthTokenKey } from "../lib/sessionHelper";
 import { RideRequest } from "../types";
@@ -172,228 +172,177 @@ const DashboardPage: React.FC = () => {
     }
   }, [isAuthenticated, navigate]);
 
-  // Get the active user - either from auth context or token
-  const activeUser = user || tokenUser;
-
-  // If no user available, show login message
-  if (!activeUser) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header />
-        <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-600">
-              Please log in to view your dashboard.
-            </p>
-            <Link
-              to="/login"
-              className="inline-block mt-4 px-6 py-2 bg-emerald-600 text-white rounded-md"
-            >
-              Go to Login
-            </Link>
-          </div>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  // Find active and past rides
+  // Calculate stats
   const activeRides = dashboardUserRides.filter(
     (ride) => ride.status === "open" || ride.status === "full"
+  );
+  const completedRides = dashboardUserRides.filter(
+    (ride) => ride.status === "completed"
   );
   const pastRides = dashboardUserRides.filter(
     (ride) => ride.status === "completed" || ride.status === "cancelled"
   );
-
-  // Calculate stats
-  const totalRides = dashboardUserRides.length;
-  const completedRides = dashboardUserRides.filter(
-    (ride) => ride.status === "completed"
-  ).length;
   const availableRides = dashboardRides.filter(
-    (r) =>
-      r.status === "open" && !dashboardUserRides.some((ur) => ur.id === r.id)
+    (ride) => ride.status === "open" && ride.seatsAvailable > 0
   ).length;
 
-  // Main dashboard content
+  const displayUser = user || tokenUser;
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-accent-50 to-secondary-50">
       <Header />
 
-      <main className="flex-grow bg-gray-50 py-8">
+      <main className="flex-grow py-8">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-800">
-              Welcome, {activeUser?.name || "User"}!
-            </h1>
-            <p className="text-gray-600 mt-2">
-              Manage your ride requests and find passengers for your trips.
-            </p>
+          {/* Welcome Section */}
+          <div className="mb-12">
+            <div className="bg-white rounded-3xl shadow-large p-8 border border-gray-100">
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                <div>
+                  <h1 className="text-4xl font-bold text-gray-900 mb-2">
+                    Welcome back, {displayUser?.name || "User"}!
+                  </h1>
+                  <p className="text-xl text-gray-600">
+                    Manage your rides and discover new journey companions
+                  </p>
+                </div>
+                <div className="mt-6 md:mt-0 flex flex-col sm:flex-row gap-3">
+                  <Link
+                    to="/create-ride"
+                    className="btn-modern px-6 py-3 bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-white rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 shadow-medium hover:shadow-large flex items-center justify-center gap-2"
+                  >
+                    <Plus className="h-5 w-5" />
+                    Create Ride
+                  </Link>
+                  <Link
+                    to="/rides"
+                    className="px-6 py-3 bg-white text-accent-600 border-2 border-accent-200 hover:border-accent-400 rounded-2xl font-semibold transition-all duration-300 hover:bg-accent-50 flex items-center justify-center gap-2"
+                  >
+                    <MapPin className="h-5 w-5" />
+                    Find Rides
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* Quick Stats */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            <div className="card-hover bg-white rounded-2xl p-6 shadow-soft border border-gray-100">
               <div className="flex items-center">
-                <div className="p-3 rounded-full bg-emerald-100 mr-4">
-                  <Users className="h-6 w-6 text-emerald-600" />
+                <div className="p-3 rounded-2xl bg-accent-100">
+                  <Users className="h-8 w-8 text-accent-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500 uppercase">Total Rides</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {totalRides}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-blue-100 mr-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6 text-blue-600"
-                  >
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 uppercase">Completed</p>
-                  <p className="text-2xl font-bold text-gray-800">
-                    {completedRides}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
-              <div className="flex items-center">
-                <div className="p-3 rounded-full bg-amber-100 mr-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6 text-amber-600"
-                  >
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-500 uppercase">
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                     Active Rides
                   </p>
-                  <p className="text-2xl font-bold text-gray-800">
+                  <p className="text-3xl font-bold text-gray-900">
                     {activeRides.length}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100">
+            <div className="card-hover bg-white rounded-2xl p-6 shadow-soft border border-gray-100">
               <div className="flex items-center">
-                <div className="p-3 rounded-full bg-green-100 mr-4">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="24"
-                    height="24"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="h-6 w-6 text-green-600"
-                  >
-                    <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
-                    <path d="M21.18 8.02c-1-2.3-2.85-4.17-5.16-5.18"></path>
-                  </svg>
+                <div className="p-3 rounded-2xl bg-secondary-100">
+                  <CheckCircle className="h-8 w-8 text-secondary-600" />
                 </div>
-                <div>
-                  <p className="text-sm text-gray-500 uppercase">
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                    Completed
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {completedRides.length}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card-hover bg-white rounded-2xl p-6 shadow-soft border border-gray-100">
+              <div className="flex items-center">
+                <div className="p-3 rounded-2xl bg-green-100">
+                  <TrendingUp className="h-8 w-8 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
                     Available Rides
                   </p>
-                  <p className="text-2xl font-bold text-gray-800">
+                  <p className="text-3xl font-bold text-gray-900">
                     {availableRides}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="card-hover bg-white rounded-2xl p-6 shadow-soft border border-gray-100">
+              <div className="flex items-center">
+                <div className="p-3 rounded-2xl bg-purple-100">
+                  <Clock className="h-8 w-8 text-purple-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                    Total Rides
+                  </p>
+                  <p className="text-3xl font-bold text-gray-900">
+                    {dashboardUserRides.length}
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Quick Actions */}
-          <div className="mb-8">
-            <div className="flex flex-wrap gap-4">
-              <Link
-                to="/create-ride"
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-md flex items-center transition-colors"
-              >
-                <Plus className="h-5 w-5 mr-2" />
-                Create New Ride
-              </Link>
-              <Link
-                to="/rides"
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="bg-white hover:bg-gray-50 text-gray-800 px-6 py-3 rounded-md border border-gray-300 flex items-center transition-colors"
-              >
-                <MapPin className="h-5 w-5 mr-2 text-gray-600" />
-                Find Rides
-              </Link>
+          {/* Active Rides Section */}
+          <div className="mb-12">
+            <div className="bg-white rounded-3xl shadow-large p-8 border border-gray-100">
+              <div className="flex justify-between items-center mb-8">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    Your Active Rides
+                  </h2>
+                  <p className="text-gray-600">
+                    Manage your ongoing ride requests and bookings
+                  </p>
+                </div>
+                <Link
+                  to="/rides"
+                  className="group flex items-center text-accent-600 hover:text-accent-700 font-semibold transition-colors"
+                >
+                  View All
+                  <ChevronsRight className="h-5 w-5 ml-1 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              </div>
+
+              <RideList
+                rides={activeRides}
+                emptyMessage="You don't have any active rides. Create a new ride or join an existing one to get started!"
+              />
             </div>
           </div>
 
-          {/* Active Rides */}
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold text-gray-800">
-                Your Active Rides
-              </h2>
-              <Link
-                to="/rides"
-                onClick={() => {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
-                className="text-emerald-600 hover:text-emerald-700 flex items-center text-sm font-medium"
-              >
-                View All
-                <ChevronsRight className="h-4 w-4 ml-1" />
-              </Link>
-            </div>
-
-            <RideList
-              rides={activeRides}
-              emptyMessage="You don't have any active rides. Create a new ride or join an existing one."
-            />
-          </div>
-
-          {/* Past Rides */}
+          {/* Past Rides Section */}
           {pastRides.length > 0 && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                Past Rides
-              </h2>
+            <div className="bg-white rounded-3xl shadow-large p-8 border border-gray-100">
+              <div className="mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Recent Rides
+                </h2>
+                <p className="text-gray-600">
+                  Your ride history and completed journeys
+                </p>
+              </div>
               <RideList rides={pastRides.slice(0, 4)} showActions={false} />
+              {pastRides.length > 4 && (
+                <div className="mt-6 text-center">
+                  <Link
+                    to="/rides"
+                    className="text-accent-600 hover:text-accent-700 font-semibold"
+                  >
+                    View all past rides
+                  </Link>
+                </div>
+              )}
             </div>
           )}
         </div>

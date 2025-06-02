@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useRide } from "../../contexts/RideContext";
 import { useAbly } from "../../contexts/AblyContext";
-import { Search } from "lucide-react";
+import { Search, MapPin, Filter } from "lucide-react";
 import { Location, RideRequest } from "../../types";
 import GlobalMap from "../map/GlobalMap";
 import RideList from "./RideList";
@@ -121,126 +121,188 @@ const FindRideForm: React.FC = () => {
   }, [searched, startingPoint, destination, refreshMatchingRides]);
 
   const handleSearch = async () => {
-    if (!startingPoint || !destination) return;
+    if (!startingPoint || !destination) {
+      return;
+    }
 
-    console.log("Searching for matching rides...");
+    setSearched(true);
 
-    // First refresh all ride data to ensure we have the latest information
+    // First refresh the full database data to ensure we have the latest rides
     await refreshAllRides();
 
-    // Then run the matching algorithm
+    // Then run the match algorithm
     const rides = findMatchingRides(startingPoint, destination);
     setMatchingRides(rides);
-    setSearched(true);
-    console.log(`Initial search found ${rides.length} rides`);
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: "smooth",
-    });
+  };
+
+  const clearSearch = () => {
+    setStartingPoint(null);
+    setDestination(null);
+    setMatchingRides([]);
+    setSearched(false);
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-6 text-gray-800">Find a Ride</h2>
+    <div className="w-full max-w-6xl mx-auto">
+      <div className="bg-white shadow-large rounded-3xl overflow-hidden border border-gray-100">
+        <div className="p-8">
+          
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div>
-              <GlobalMap
-                startingPoint={startingPoint}
-                destination={destination}
-                onStartingPointChange={setStartingPoint}
-                onDestinationChange={setDestination}
-                height="350px"
-                rides={matchingRides}
-              />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Map Section */}
+            <div className="space-y-6">
+              <div className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-200">
+                <GlobalMap
+                  startingPoint={startingPoint}
+                  destination={destination}
+                  onStartingPointChange={setStartingPoint}
+                  onDestinationChange={setDestination}
+                  height="400px"
+                />
+              </div>
 
-              <div className="mt-6 mb-6">
+              {/* Search Controls */}
+              <div className="flex flex-col sm:flex-row gap-3">
                 <button
-                  type="button"
                   onClick={handleSearch}
-                  className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-medium rounded-md shadow transition-colors focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-70 flex items-center justify-center"
                   disabled={!startingPoint || !destination}
+                  className="btn-modern flex-1 py-3 px-6 bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-medium hover:shadow-large disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-3"
                 >
-                  <Search className="h-5 w-5 mr-2" />
-                  Find Matching Rides
+                  <Search className="w-5 h-5" />
+                  Search Rides
+                </button>
+                <button
+                  onClick={clearSearch}
+                  className="px-6 py-3 bg-gray-100 text-gray-700 font-semibold rounded-2xl hover:bg-gray-200 transition-all duration-200 flex items-center justify-center gap-2"
+                >
+                  <Filter className="w-5 h-5" />
+                  Clear
                 </button>
               </div>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="text-lg font-semibold mb-4">Search Details</h3>
+            {/* Search Details Panel */}
+            <div className="space-y-6">
+              <div className="bg-gradient-to-br from-secondary-50 to-accent-50 rounded-2xl p-6 border border-gray-200">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  <MapPin className="h-6 w-6 text-secondary-600 mr-3" />
+                  Search Details
+                </h3>
 
-              {startingPoint && (
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-700">
-                    Starting Point:
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {startingPoint.address}
-                  </p>
-                </div>
-              )}
+                {startingPoint ? (
+                  <div className="mb-6 p-4 bg-white rounded-xl border border-gray-200">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">
+                      Starting Point:
+                    </p>
+                    <p className="text-gray-900 font-medium">
+                      {startingPoint.address}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mb-6 p-4 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300">
+                    <p className="text-gray-500 text-center">
+                      📍 Select your starting point on the map
+                    </p>
+                  </div>
+                )}
 
-              {destination && (
-                <div className="mb-4">
-                  <p className="text-sm font-medium text-gray-700">
-                    Destination:
-                  </p>
-                  <p className="text-sm text-gray-600">{destination.address}</p>
-                </div>
-              )}
+                {destination ? (
+                  <div className="mb-6 p-4 bg-white rounded-xl border border-gray-200">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">
+                      Destination:
+                    </p>
+                    <p className="text-gray-900 font-medium">
+                      {destination.address}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mb-6 p-4 bg-gray-100 rounded-xl border-2 border-dashed border-gray-300">
+                    <p className="text-gray-500 text-center">
+                      🎯 Select your destination on the map
+                    </p>
+                  </div>
+                )}
 
-              {searched && (
-                <div className="mt-4">
-                  <p className="text-sm font-medium text-gray-700">
-                    Found Rides:
-                  </p>
-                  <p className="text-sm text-gray-600">
-                    {matchingRides.length} rides match your route
-                  </p>
-                </div>
-              )}
+                {searched && (
+                  <div className="p-4 bg-white rounded-xl border border-gray-200">
+                    <p className="text-sm font-semibold text-gray-700 mb-2">
+                      Search Results:
+                    </p>
+                    <p className="text-gray-900 font-medium">
+                      {matchingRides.length} ride{matchingRides.length !== 1 ? 's' : ''} found
+                    </p>
+                  </div>
+                )}
+              </div>
 
-              <div className="text-sm text-gray-500 mt-6">
-                <p>Need help?</p>
-                <ul className="list-disc pl-5 mt-2 space-y-1">
-                  <li>Use the search box to find a location</li>
-                  <li>Drag markers to refine exact positions</li>
-                  <li>Click anywhere on the map to set a location</li>
+              {/* Help Section */}
+              <div className="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+                <h4 className="text-lg font-semibold text-blue-800 mb-4">
+                  💡 Search Tips
+                </h4>
+                <ul className="space-y-3 text-blue-700">
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    Use the search box to find locations quickly
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    Drag markers to refine exact positions
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    Click anywhere on the map to set locations
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-blue-500 mr-2">•</span>
+                    Our algorithm finds rides along similar routes
+                  </li>
                 </ul>
               </div>
             </div>
           </div>
-
-          {searched && (
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold mb-4 text-gray-800">
-                {matchingRides.length > 0
-                  ? `Found ${matchingRides.length} matching rides`
-                  : "No matching rides found"}
-              </h3>
-
-              <RideList
-                rides={matchingRides}
-                emptyMessage="No rides match your route. Would you like to create a new ride request?"
-              />
-
-              {matchingRides.length === 0 && (
-                <div className="mt-6 text-center">
-                  <a
-                    href="/create-ride"
-                    className="inline-block px-6 py-3 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 transition-colors"
-                  >
-                    Create a New Ride Request
-                  </a>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
+
+      {/* Search Results */}
+      {searched && (
+        <div className="mt-8">
+          <div className="bg-white shadow-large rounded-3xl p-8 border border-gray-100">
+            <div className="text-center mb-8">
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                {matchingRides.length > 0
+                  ? `Found ${matchingRides.length} matching ride${matchingRides.length !== 1 ? 's' : ''}`
+                  : "No matching rides found"}
+              </h3>
+              {matchingRides.length > 0 ? (
+                <p className="text-gray-600">
+                  Here are the rides that match your route
+                </p>
+              ) : (
+                <p className="text-gray-600">
+                  Try adjusting your route or create a new ride request
+                </p>
+              )}
+            </div>
+
+            <RideList
+              rides={matchingRides}
+              emptyMessage="No rides match your route. Would you like to create a new ride request?"
+            />
+
+            {matchingRides.length === 0 && (
+              <div className="mt-8 text-center">
+                <a
+                  href="/create-ride"
+                  className="btn-modern inline-flex items-center px-8 py-4 bg-gradient-to-r from-accent-400 to-accent-500 hover:from-accent-500 hover:to-accent-600 text-white font-semibold rounded-2xl transition-all duration-300 transform hover:scale-105 shadow-medium"
+                >
+                  Create a New Ride Request
+                </a>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
