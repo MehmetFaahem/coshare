@@ -77,6 +77,9 @@ const PhoneNumberModal: React.FC<PhoneNumberModalProps> = ({
           </button>
           <button
             type="submit"
+            onClick={() => {
+             window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
             className="px-6 py-3 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-medium focus:outline-none focus:ring-2 focus:ring-accent-400"
           >
             Create Ride

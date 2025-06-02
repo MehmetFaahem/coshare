@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { RideRequest } from "../../types";
-import { MapPin, Navigation, Users, Calendar, User, Phone } from "lucide-react";
+import { MapPin, Navigation, Users, Calendar, User, Phone, Clock, CheckCircle } from "lucide-react";
 import RideMap from "../map/RideMap";
 import { useAuth } from "../../contexts/AuthContext";
 import { useRide } from "../../contexts/RideContext";
@@ -33,6 +33,10 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
   const navigate = useNavigate();
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [passengers, setPassengers] = useState<PassengerInfo[]>([]);
+  const [isJoining, setIsJoining] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
+  const [isCompleting, setIsCompleting] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
 
   const isCreator = user && ride.creator === user.id;
   const isPassenger = user && ride.passengers.includes(user.id);
@@ -104,54 +108,38 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
     }
   }, [ride.id, fetchPassengersInfo]);
 
-  const formatDate = (dateString: string) => {
+  const formatDateTime = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString(undefined, {
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
       year: "numeric",
-      month: "short",
+      month: "long",
       day: "numeric",
-    });
-  };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString(undefined, {
       hour: "2-digit",
       minute: "2-digit",
     });
   };
 
-  const getStatusBadge = () => {
-    switch (ride.status) {
-      case "open":
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-emerald-100 text-emerald-800">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 mr-1.5"></span>
-            Open
-          </span>
-        );
-      case "full":
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-800">
-            <span className="h-2 w-2 rounded-full bg-amber-500 mr-1.5"></span>
-            Full
-          </span>
-        );
-      case "completed":
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-            <span className="h-2 w-2 rounded-full bg-blue-500 mr-1.5"></span>
-            Completed
-          </span>
-        );
-      case "cancelled":
-        return (
-          <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800">
-            <span className="h-2 w-2 rounded-full bg-red-500 mr-1.5"></span>
-            Cancelled
-          </span>
-        );
-    }
+  const getStatusBadge = (status: string) => {
+    const badges = {
+      open: "bg-green-100 text-green-800 border-green-200",
+      full: "bg-blue-100 text-blue-800 border-blue-200",
+      completed: "bg-gray-100 text-gray-800 border-gray-200",
+      cancelled: "bg-red-100 text-red-800 border-red-200",
+    };
+    
+    const statusText = {
+      open: "Open for Passengers",
+      full: "Fully Booked",
+      completed: "Ride Completed",
+      cancelled: "Ride Cancelled",
+    };
+
+    return (
+      <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border ${badges[status as keyof typeof badges] || badges.open}`}>
+        {statusText[status as keyof typeof statusText] || "Unknown Status"}
+      </span>
+    );
   };
 
   const handleJoinRideClick = () => {
@@ -221,214 +209,219 @@ const RideDetail: React.FC<RideDetailProps> = ({ ride }) => {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="p-6">
-        <div className="flex flex-wrap justify-between items-start mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">
-              Ride #{ride.id.substring(0, 4)}
-            </h2>
-            <p className="text-gray-600 flex items-center mt-2">
-              <Calendar className="h-5 w-5 mr-2" />
-              Created on {formatDate(ride.createdAt)} at{" "}
-              {formatTime(ride.createdAt)}
-            </p>
+    <div className="max-w-4xl mx-auto space-y-6">
+      {/* Header Card */}
+      <div className="bg-white rounded-3xl shadow-large border border-gray-100 overflow-hidden">
+        <div className="bg-gradient-to-r from-accent-500 to-accent-600 text-white p-8">
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold mb-2">
+                {isCreator ? "Your Ride Request" : "Ride Details"}
+              </h1>
+              <div className="flex items-center text-accent-100">
+                <Calendar className="h-5 w-5 mr-2" />
+                <span className="text-lg">{formatDateTime(ride.createdAt)}</span>
+              </div>
+            </div>
+            {getStatusBadge(ride.status)}
           </div>
-          <div className="mt-2 sm:mt-0">{getStatusBadge()}</div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-          <div>
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                Ride Details
-              </h3>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex items-start mb-4">
-                  <MapPin className="h-5 w-5 text-emerald-600 mt-0.5 mr-3 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">
-                      STARTING POINT
+        <div className="p-8">
+          {/* Route Information */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <div className="space-y-6">
+              <div className="bg-green-50 rounded-2xl p-6 border border-green-200">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <MapPin className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-green-600 uppercase tracking-wide mb-1">
+                      Starting Point
                     </p>
-                    <p className="text-gray-800">
+                    <p className="text-lg font-medium text-gray-900">
                       {ride.startingPoint.address}
                     </p>
                   </div>
                 </div>
+              </div>
 
-                <div className="flex items-start mb-4">
-                  <Navigation className="h-5 w-5 text-red-500 mt-0.5 mr-3 flex-shrink-0" />
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium">
-                      DESTINATION
+              <div className="bg-red-50 rounded-2xl p-6 border border-red-200">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Navigation className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-red-600 uppercase tracking-wide mb-1">
+                      Destination
                     </p>
-                    <p className="text-gray-800">{ride.destination.address}</p>
+                    <p className="text-lg font-medium text-gray-900">
+                      {ride.destination.address}
+                    </p>
                   </div>
                 </div>
-
-                {/* Creator's phone number (if available) */}
-                {ride.contactPhone && (
-                  <div className="flex items-start mb-4">
-                    <Phone className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
-                    <div>
-                      <p className="text-xs text-gray-500 font-medium">
-                        CREATOR'S CONTACT NUMBER
-                      </p>
-                      <p className="text-gray-800">{ride.contactPhone}</p>
-                      {!isCreator && (
-                        <p className="text-xs text-gray-500 mt-0.5">
-                          Call this number to coordinate with the ride creator
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Try to find creator phone from passengers list if not available on ride object */}
-                {!ride.contactPhone && passengers.length > 0 && (
-                  <>
-                    {passengers.find((p) => p.isCreator && p.contactPhone) && (
-                      <div className="flex items-start mb-4">
-                        <Phone className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" />
-                        <div>
-                          <p className="text-xs text-gray-500 font-medium">
-                            CREATOR'S CONTACT NUMBER
-                          </p>
-                          <p className="text-gray-800">
-                            {passengers.find((p) => p.isCreator)?.contactPhone}
-                          </p>
-                          {!isCreator && (
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              Call this number to coordinate with the ride
-                              creator
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
               </div>
             </div>
 
-            <div>
-              <h3 className="text-lg font-semibold mb-3 text-gray-800">
-                Passengers
-              </h3>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <div className="flex justify-between items-center mb-3">
-                  <div className="flex items-center">
-                    <Users className="h-5 w-5 text-gray-500 mr-2" />
-                    <span className="font-medium">
-                      {ride.passengers.length}/{ride.totalSeats} passengers
-                    </span>
+            {/* Seats Information */}
+            <div className="bg-accent-50 rounded-2xl p-6 border border-accent-200">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-accent-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Users className="h-8 w-8 text-accent-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Seat Availability</h3>
+                <div className="text-4xl font-bold text-accent-600 mb-2">
+                  {ride.seatsAvailable}/{ride.totalSeats}
+                </div>
+                <p className="text-gray-600">seats available</p>
+                
+                {/* Progress Bar */}
+                <div className="mt-4">
+                  <div className="bg-gray-200 rounded-full h-3 overflow-hidden">
+                    <div
+                      className="bg-gradient-to-r from-accent-400 to-accent-500 h-full transition-all duration-300"
+                      style={{
+                        width: `${((ride.totalSeats - ride.seatsAvailable) / ride.totalSeats) * 100}%`,
+                      }}
+                    ></div>
                   </div>
-                  <span className="text-sm text-gray-500">
-                    {ride.seatsAvailable} seats available
-                  </span>
-                </div>
-
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden mb-4">
-                  <div
-                    className="h-full bg-emerald-500"
-                    style={{
-                      width: `${
-                        (ride.passengers.length / ride.totalSeats) * 100
-                      }%`,
-                    }}
-                  ></div>
-                </div>
-
-                <div className="space-y-3">
-                  {passengers.map((passenger, index) => (
-                    <div key={index} className="flex items-center">
-                      <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 mr-3">
-                        <User className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-800">
-                          {passenger.isCreator
-                            ? "Ride Creator"
-                            : `Passenger ${index + 1}`}
-                        </p>
-                        {passenger.contactPhone &&
-                          (isCreator || isPassenger) && (
-                            <div className="flex items-center mt-1">
-                              <Phone className="h-3 w-3 text-gray-500 mr-1" />
-                              <p className="text-xs text-gray-600">
-                                {passenger.contactPhone}
-                              </p>
-                            </div>
-                          )}
-                      </div>
-                    </div>
-                  ))}
+                  <p className="text-sm text-gray-500 mt-2">
+                    {ride.passengers.length} passengers joined
+                  </p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div>
-            <h3 className="text-lg font-semibold mb-3 text-gray-800">
-              Route Map
-            </h3>
-            <RideMap
-              startingPoint={ride.startingPoint}
-              destination={ride.destination}
-              height="300px"
-            />
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              {canJoin && (
-                <button
-                  onClick={handleJoinRideClick}
-                  className="px-4 py-2 bg-emerald-600 text-white font-medium rounded-md hover:bg-emerald-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500"
-                >
-                  Join This Ride
-                </button>
-              )}
-
-              {canLeaveOrCancel && (
-                <button
-                  onClick={handleCancelRide}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-                >
-                  {isCreator ? "Cancel Ride" : "Leave Ride"}
-                </button>
-              )}
-
-              {canComplete && (
-                <button
-                  onClick={handleCompleteRide}
-                  className="px-4 py-2 bg-blue-600 text-white font-medium rounded-md hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Mark as Completed
-                </button>
-              )}
-
-              <button
-                onClick={() => navigate(-1)}
-                className="px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-md hover:bg-gray-200 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
-              >
-                Go Back
-              </button>
+          {/* Map */}
+          <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">Route Map</h3>
+            <div className="h-96 rounded-xl overflow-hidden">
+              <RideMap ride={ride} />
             </div>
+          </div>
+
+          {/* Passengers List */}
+          {ride.passengers.length > 0 && (
+            <div className="mt-8 bg-gray-50 rounded-2xl p-6 border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
+                Passengers ({ride.passengers.length})
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {ride.passengers.map((passengerId, index) => (
+                  <div
+                    key={passengerId}
+                    className="bg-white rounded-xl p-4 border border-gray-200 flex items-center space-x-3"
+                  >
+                    <div className="w-10 h-10 bg-gradient-to-r from-accent-400 to-accent-500 rounded-full flex items-center justify-center">
+                      <User className="h-5 w-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-gray-900">
+                        {passengerId === ride.creator ? "Creator" : `Passenger ${index + 1}`}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {passengerId === user?.id ? "You" : "Other user"}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="mt-8 flex flex-wrap gap-4 p-6 bg-gray-50 rounded-2xl border border-gray-200">
+            {canJoin && (
+              <button
+                onClick={handleJoinRideClick}
+                disabled={isJoining}
+                className="flex-1 min-w-0 bg-gradient-to-r from-accent-500 to-accent-600 hover:from-accent-600 hover:to-accent-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-medium disabled:transform-none disabled:shadow-none"
+              >
+                {isJoining ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                    Joining...
+                  </div>
+                ) : (
+                  "Join This Ride"
+                )}
+              </button>
+            )}
+
+            {canLeaveOrCancel && (
+              <button
+                onClick={handleCancelRide}
+                disabled={isLeaving}
+                className="flex-1 min-w-0 bg-gray-100 hover:bg-gray-200 disabled:bg-gray-50 text-gray-700 disabled:text-gray-400 px-6 py-3 rounded-xl font-semibold transition-colors"
+              >
+                {isLeaving ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-gray-600 mr-2"></div>
+                    Processing...
+                  </div>
+                ) : isCreator ? (
+                  "Cancel Ride"
+                ) : (
+                  "Leave Ride"
+                )}
+              </button>
+            )}
+
+            {canComplete && (
+              <button
+                onClick={handleCompleteRide}
+                disabled={isCompleting}
+                className="flex-1 min-w-0 bg-gradient-to-r from-secondary-500 to-secondary-600 hover:from-secondary-600 hover:to-secondary-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 transform hover:scale-105 shadow-medium disabled:transform-none disabled:shadow-none"
+              >
+                {isCompleting ? (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white mr-2"></div>
+                    Completing...
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center">
+                    <CheckCircle className="h-5 w-5 mr-2" />
+                    Mark as Completed
+                  </div>
+                )}
+              </button>
+            )}
+
+            <button
+              onClick={() => navigate(-1)}
+              className="flex-1 min-w-0 border-2 border-gray-200 hover:border-accent-300 hover:bg-accent-50 text-gray-700 hover:text-accent-700 px-6 py-3 rounded-xl font-semibold transition-all duration-200"
+            >
+              Go Back
+            </button>
           </div>
         </div>
+      </div>
 
-        <div className="border-t border-gray-200 pt-6">
-          <h3 className="text-lg font-semibold mb-3 text-gray-800">
-            Instructions for Riders
-          </h3>
-          <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg">
-            <p className="text-amber-800">
-              <strong>Important:</strong> This app only helps you find
-              co-passengers. Once your group is formed, you'll need to arrange
-              for a ride offline. We recommend meeting at the starting point
-              10 minutes before your planned departure.
-            </p>
+      {/* Instructions Card */}
+      <div className="bg-blue-50 rounded-3xl border border-blue-200 p-8">
+        <div className="flex items-start space-x-4">
+          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+            <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-xl font-bold text-blue-800 mb-3">
+              Important Instructions
+            </h3>
+            <div className="text-blue-700 space-y-3">
+              <p className="leading-relaxed">
+                <strong>Transportation Arrangement:</strong> This app helps you find co-passengers. Once your group is formed, you'll need to arrange for transportation offline.
+              </p>
+              <p className="leading-relaxed">
+                <strong>Meeting Point:</strong> We recommend meeting at the starting point 10 minutes before your planned departure time.
+              </p>
+              <p className="leading-relaxed">
+                <strong>Communication:</strong> Use the contact information shared after joining to coordinate with other passengers.
+              </p>
+            </div>
           </div>
         </div>
       </div>
