@@ -37,35 +37,34 @@ export const VEHICLE_OPTIONS: Array<{
   label: string;
   description: string;
   icon: string;
-  estimatedCost: string;
 }> = [
   {
     value: "Rickshaw",
     label: "Rickshaw",
     description: "Traditional rickshaw",
     icon: "🚲",
-    estimatedCost: "৳20-50"
+
   },
   {
     value: "CNG",
     label: "CNG",
-    description: "3-wheeler auto-rickshaw - fast and economical",
+    description: "3-wheeler auto-rickshaw",
     icon: "🛺",
-    estimatedCost: "৳30-100"
+
   },
   {
     value: "Bike",
     label: "Motorbike",
-    description: "Motorcycle ride - quick for short distances",
+    description: "Quick for short distances",
     icon: "🏍️",
-    estimatedCost: "৳15-40"
+
   },
   {
     value: "Uber/Pathao",
     label: "Ride-sharing",
     description: "App-based ride sharing - convenient and trackable",
     icon: "📱",
-    estimatedCost: "৳40-150"
+
   }
 ];
 
