@@ -2,16 +2,18 @@ import React, { useState } from "react";
 import { useRide } from "../../contexts/RideContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
-import { Location } from "../../types";
+import { Location, VehicleType } from "../../types";
 import GlobalMap from "../map/GlobalMap";
 import { useNotification } from "../../contexts/NotificationContext";
 import PhoneNumberModal from "./PhoneNumberModal";
-import { MapPin, Users, ArrowRight } from "lucide-react";
+import VehicleSelector from "./VehicleSelector";
+import { MapPin, Users, ArrowRight, Car } from "lucide-react";
 
 const CreateRideForm: React.FC = () => {
   const [startingPoint, setStartingPoint] = useState<Location | null>(null);
   const [destination, setDestination] = useState<Location | null>(null);
   const [totalSeats, setTotalSeats] = useState<number>(2);
+  const [selectedVehicle, setSelectedVehicle] = useState<VehicleType>("CNG");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState<string>("");
@@ -42,7 +44,8 @@ const CreateRideForm: React.FC = () => {
         startingPoint!,
         destination!,
         totalSeats,
-        phone
+        phone,
+        selectedVehicle
       );
       toast.success("Ride request created successfully!");
       addNotification(
@@ -75,6 +78,20 @@ const CreateRideForm: React.FC = () => {
                     onStartingPointChange={setStartingPoint}
                     onDestinationChange={setDestination}
                     height="300px sm:400px"
+                  />
+                </div>
+
+                {/* Vehicle Selection */}
+                <div className="bg-blue-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border border-blue-200">
+                  <div className="flex items-center mb-3 sm:mb-4">
+                    <Car className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 mr-2 sm:mr-3" />
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                      Vehicle Type
+                    </h3>
+                  </div>
+                  <VehicleSelector
+                    selectedVehicle={selectedVehicle}
+                    onVehicleChange={setSelectedVehicle}
                   />
                 </div>
 
@@ -169,6 +186,25 @@ const CreateRideForm: React.FC = () => {
                     </div>
                   )}
 
+                  <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-gray-200">
+                    <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                      Vehicle Type:
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-lg">
+                        {selectedVehicle === "Rickshaw" && "🚲"}
+                        {selectedVehicle === "CNG" && "🛺"}
+                        {selectedVehicle === "Bike" && "🏍️"}
+                        {selectedVehicle === "Bus" && "🚌"}
+                        {selectedVehicle === "Car" && "🚗"}
+                        {selectedVehicle === "Uber/Pathao" && "📱"}
+                      </span>
+                      <span className="text-sm sm:text-base text-gray-900 font-medium">
+                        {selectedVehicle}
+                      </span>
+                    </div>
+                  </div>
+
                   <div className="p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl border border-gray-200">
                     <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                       Available Seats:
@@ -191,11 +227,11 @@ const CreateRideForm: React.FC = () => {
                     </li>
                     <li className="flex items-start text-sm sm:text-base">
                       <span className="text-amber-500 mr-2 flex-shrink-0">•</span>
-                      <span>Drag markers to adjust exact pickup points</span>
+                      <span>Choose the vehicle type you plan to use</span>
                     </li>
                     <li className="flex items-start text-sm sm:text-base">
                       <span className="text-amber-500 mr-2 flex-shrink-0">•</span>
-                      <span>Click anywhere on the map to set locations</span>
+                      <span>Drag markers to adjust exact pickup points</span>
                     </li>
                     <li className="flex items-start text-sm sm:text-base">
                       <span className="text-amber-500 mr-2 flex-shrink-0">•</span>
