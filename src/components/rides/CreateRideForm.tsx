@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRide } from "../../contexts/RideContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-hot-toast";
@@ -21,6 +21,28 @@ const CreateRideForm: React.FC = () => {
   const { createRideRequest } = useRide();
   const { addNotification } = useNotification();
   const navigate = useNavigate();
+
+  // Function to get available seat options based on vehicle type
+  const getAvailableSeats = (vehicle: VehicleType): number[] => {
+    switch (vehicle) {
+      case "Rickshaw":
+      case "CNG":
+      case "Bike":
+        return [2, 3];
+      case "Uber/Pathao":
+        return [2, 3, 4, 5];
+      default:
+        return [2, 3, 4, 5]; // fallback for any other vehicle types
+    }
+  };
+
+  // Reset total seats when vehicle changes to ensure valid selection
+  useEffect(() => {
+    const availableSeats = getAvailableSeats(selectedVehicle);
+    if (!availableSeats.includes(totalSeats)) {
+      setTotalSeats(availableSeats[0]); // Set to the first available option
+    }
+  }, [selectedVehicle, totalSeats]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,6 +83,8 @@ const CreateRideForm: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+
+  const availableSeats = getAvailableSeats(selectedVehicle);
 
   return (
     <div className="w-full max-w-7xl mx-auto">
@@ -104,7 +128,7 @@ const CreateRideForm: React.FC = () => {
                     </label>
                   </div>
                   <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 sm:gap-3">
-                    {[2, 3, 4, 5].map((seats) => (
+                    {availableSeats.map((seats) => (
                       <button
                         key={seats}
                         type="button"
@@ -119,9 +143,17 @@ const CreateRideForm: React.FC = () => {
                       </button>
                     ))}
                   </div>
-                  <p className="mt-3 sm:mt-4 text-xs sm:text-sm text-accent-700 bg-accent-100 p-2 sm:p-3 rounded-lg sm:rounded-xl">
-                    💡 A standard ride can accommodate up to 5 passengers comfortably
-                  </p>
+                  <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-accent-700 bg-accent-100 p-2 sm:p-3 rounded-lg sm:rounded-xl">
+                    <p className="mb-1">
+                      💡 <strong>Seat capacity for {selectedVehicle}:</strong>
+                    </p>
+                    <p>
+                      {selectedVehicle === "Rickshaw" && "Traditional rickshaws typically accommodate 2-3 passengers"}
+                      {selectedVehicle === "CNG" && "CNG auto-rickshaws can comfortably fit 2-3 passengers"}
+                      {selectedVehicle === "Bike" && "Motorbike rides are suitable for 2-3 people (including driver)"}
+                      {selectedVehicle === "Uber/Pathao" && "Ride-sharing cars can accommodate 2-5 passengers depending on the vehicle"}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Submit Button */}
@@ -195,8 +227,6 @@ const CreateRideForm: React.FC = () => {
                         {selectedVehicle === "Rickshaw" && "🚲"}
                         {selectedVehicle === "CNG" && "🛺"}
                         {selectedVehicle === "Bike" && "🏍️"}
-                        {selectedVehicle === "Bus" && "🚌"}
-                        {selectedVehicle === "Car" && "🚗"}
                         {selectedVehicle === "Uber/Pathao" && "📱"}
                       </span>
                       <span className="text-sm sm:text-base text-gray-900 font-medium">
@@ -211,6 +241,9 @@ const CreateRideForm: React.FC = () => {
                     </p>
                     <p className="text-sm sm:text-base text-gray-900 font-medium">
                       {totalSeats} passengers total (including you)
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      {totalSeats - 1} seats available for other passengers
                     </p>
                   </div>
                 </div>
@@ -231,11 +264,11 @@ const CreateRideForm: React.FC = () => {
                     </li>
                     <li className="flex items-start text-sm sm:text-base">
                       <span className="text-amber-500 mr-2 flex-shrink-0">•</span>
-                      <span>Drag markers to adjust exact pickup points</span>
+                      <span>Seat options adjust based on vehicle capacity</span>
                     </li>
                     <li className="flex items-start text-sm sm:text-base">
                       <span className="text-amber-500 mr-2 flex-shrink-0">•</span>
-                      <span>Choose seat count based on ride capacity</span>
+                      <span>Drag markers to adjust exact pickup points</span>
                     </li>
                   </ul>
                 </div>
